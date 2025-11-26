@@ -61,43 +61,17 @@
     <h2>🔴 Checking stream status...</h2>
   </section>
 
-  <script>
-    async function checkStream() {
-      const section = document.getElementById('streamSection');
+<!-- Add a placeholder for the Twitch embed -->
+<div id="twitch-embed"></div>
 
-      try {
-        const response = await fetch('https://api.twitch.tv/helix/streams?user_login=vincentleet', {
-          headers: {
-            'Client-ID': 'YOUR_TWITCH_CLIENT_ID',
-            'Authorization': 'Bearer YOUR_ACCESS_TOKEN'
-          }
-        });
-        const data = await response.json();
+<!-- Load the Twitch embed script -->
+<script src="https://player.twitch.tv/js/embed/v1.js"></script>
 
-        if (data.data && data.data.length > 0) {
-          section.innerHTML = `
-            <h2>🔴 Live Now</h2>
-            <iframe
-              src="https://player.twitch.tv/?channel=vincentleet&parent=${window.location.hostname}"
-              height="480"
-              width="854"
-              allowfullscreen>
-            </iframe>
-          `;
-        } else {
-          section.innerHTML = `
-            <div class="offline-message">
-              <h2>🟡 Currently Offline</h2>
-              <p>Catch up on past streams in the <a href="vods.html" style="color:#00ffee;">VODs</a> section!</p>
-            </div>
-          `;
-        }
-      } catch (err) {
-        section.innerHTML = "<p>Error checking Twitch status. Try again later.</p>";
-      }
-    }
-
-    checkStream();
-  </script>
+<!-- Create a Twitch.Player object. This will render within the placeholder div -->
+<script type="text/javascript">
+  new Twitch.Player("twitch-embed", {
+    channel: "vincentleet"
+  });
+</script>
 </body>
 </html>

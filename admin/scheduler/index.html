@@ -1,0 +1,1104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Discord Schedule Builder</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    :root {
+      color-scheme: light;
+    }
+    body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: #f3f4f6;
+      color: #111827;
+      margin: 0;
+      padding: 1.5rem 0;
+      font-size: 17px;
+    }
+    .container {
+      max-width: 960px;
+      margin: 0 auto;
+      padding: 0 1.25rem;
+    }
+    h1 {
+      font-size: 1.7rem;
+      margin-bottom: 0.3rem;
+    }
+    h2 {
+      font-size: 1.15rem;
+      margin: 0.2rem 0 0.6rem;
+    }
+    .subtitle {
+      font-size: 0.9rem;
+      color: #4b5563;
+      margin-bottom: 1rem;
+    }
+    .card {
+      background: #ffffff;
+      border-radius: 0.75rem;
+      padding: 1rem 1.25rem;
+      border: 1px solid #e5e7eb;
+      margin-bottom: 1rem;
+      box-shadow: 0 8px 20px rgba(15, 23, 42, 0.04);
+    }
+    label {
+      font-size: 0.9rem;
+      display: block;
+      margin-bottom: 0.15rem;
+      color: #374151;
+    }
+    input[type="text"],
+    input[type="time"],
+    select,
+    textarea {
+      width: 100%;
+      background: #f9fafb;
+      border-radius: 0.5rem;
+      border: 1px solid #d1d5db;
+      padding: 0.45rem 0.6rem;
+      color: #111827;
+      font-size: 0.95rem;
+      box-sizing: border-box;
+    }
+    input[type="text"]:focus,
+    input[type="time"]:focus,
+    select:focus,
+    textarea:focus {
+      outline: none;
+      border-color: #6366f1;
+      box-shadow: 0 0 0 1px rgba(99, 102, 241, 0.4);
+      background: #ffffff;
+    }
+    textarea {
+      min-height: 180px;
+      resize: vertical;
+      white-space: pre;
+    }
+    .row {
+      display: flex;
+      gap: 0.75rem;
+      flex-wrap: wrap;
+      margin-bottom: 0.7rem;
+    }
+    .row > div {
+      flex: 1;
+      min-width: 220px;
+    }
+    .small {
+      font-size: 0.8rem;
+      color: #6b7280;
+      margin-top: 0.1rem;
+    }
+    .pill {
+      border-radius: 999px;
+      padding: 0.18rem 0.7rem;
+      font-size: 0.8rem;
+      border: 1px solid #e5e7eb;
+      color: #4b5563;
+      background: #f9fafb;
+    }
+    .tag {
+      font-size: 0.8rem;
+      background: #eef2ff;
+      border-radius: 999px;
+      padding: 0.15rem 0.6rem;
+      color: #4338ca;
+    }
+    code {
+      background: #e5e7eb;
+      border-radius: 0.35rem;
+      padding: 0.05rem 0.3rem;
+      font-size: 0.8rem;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+    }
+    button {
+      border-radius: 999px;
+      border: 1px solid #d1d5db;
+      background: #ffffff;
+      color: #111827;
+      padding: 0.45rem 0.9rem;
+      font-size: 0.9rem;
+      cursor: pointer;
+    }
+    button.primary {
+      background: #4f46e5;
+      border-color: #4f46e5;
+      color: #f9fafb;
+      font-weight: 600;
+    }
+    button.small-btn {
+      padding: 0.25rem 0.7rem;
+      font-size: 0.8rem;
+    }
+    button:disabled {
+      opacity: 0.6;
+      cursor: default;
+    }
+    .btn-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.6rem;
+      margin-top: 0.7rem;
+      align-items: center;
+    }
+    .footer-note {
+      font-size: 0.8rem;
+      color: #6b7280;
+      margin-top: 0.5rem;
+    }
+    .preset-status {
+      font-size: 0.8rem;
+      color: #6b7280;
+    }
+
+    .show-card,
+    .schedule-card {
+      border-radius: 0.75rem;
+      border: 1px solid #e5e7eb;
+      padding: 0.8rem;
+      margin-bottom: 0.8rem;
+      background: #f9fafb;
+    }
+    .show-header,
+    .schedule-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 0.5rem;
+      gap: 0.5rem;
+    }
+    .show-title,
+    .schedule-title {
+      font-weight: 600;
+      font-size: 1rem;
+      color: #111827;
+    }
+    .drag-handle {
+      cursor: grab;
+      font-size: 0.85rem;
+      color: #9ca3af;
+      margin-right: 0.3rem;
+    }
+    .schedule-card.dragging {
+      opacity: 0.7;
+      border-style: dashed;
+    }
+    .schedule-preview {
+      margin-top: 0.25rem;
+      font-size: 0.8rem;
+      color: #4b5563;
+    }
+    .section-header-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 0.75rem;
+      margin-bottom: 0.4rem;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Discord Schedule Builder</h1>
+    <p class="subtitle">
+      Build your weekly schedule post with Discord timestamps (<code>&lt;t:...:F&gt;</code> and <code>&lt;t:...:R&gt;</code>).
+      Adjust your shows and stream times, generate, then copy-paste straight into <code>#schedule</code>.
+    </p>
+
+    <!-- 1. Week info -->
+    <div class="card">
+      <h2>1. Week</h2>
+      <div class="row">
+        <div>
+          <label for="weekMode">Week label</label>
+          <select id="weekMode">
+            <option value="current" selected>Current week (auto)</option>
+            <option value="next">Next week (auto)</option>
+            <option value="custom">Custom label</option>
+          </select>
+          <div class="small">
+            Auto modes use your system timezone (set to <strong>Pacific/Auckland</strong>) and produce labels like
+            <code>2025 Week 46 (10–16 November)</code>.
+          </div>
+          <div class="small" id="weekPreview" style="margin-top:0.25rem;font-weight:500;"></div>
+        </div>
+      </div>
+      <div class="row" id="customWeekWrapper" style="display:none;">
+        <div>
+          <label for="customWeekLabel">Custom week label</label>
+          <input id="customWeekLabel" type="text"
+                 value="2025 Week 46 (10–16 November)" />
+          <div class="small">
+            This becomes the bold heading prefix, e.g. <code>2025 Week 46 (10–16 November)</code>.
+          </div>
+        </div>
+      </div>
+      <div class="small">
+        Twitch link is fixed to <code>https://twitch.tv/vincentleet</code>.
+      </div>
+    </div>
+
+    <!-- 2. Show definitions -->
+    <div class="card">
+      <div class="section-header-row">
+        <h2>2. Show details</h2>
+        <button id="toggleShowsBtn" class="small-btn">Hide</button>
+      </div>
+      <div id="showSectionBody">
+        <p class="small">
+          Define each <strong>show</strong> once (name, emoji, <strong>regular day + time</strong>, description, default duration).
+          In the schedule, we’ll use these regular settings unless you override them for a specific stream.
+        </p>
+        <div id="showsContainer"></div>
+        <div class="btn-row">
+          <button id="addShowBtn">+ Add show</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 3. Schedule slots -->
+    <div class="card">
+      <h2>3. Schedule (streams &amp; times)</h2>
+      <p class="small">
+        Each slot chooses a show. If you leave the overrides empty, it uses that show’s regular day/time
+        from Section 2. The preview shows the exact date & Discord timestamps for the selected week.
+      </p>
+      <div id="scheduleContainer"></div>
+      <div class="btn-row">
+        <button id="addScheduleBtn">+ Add stream slot</button>
+        <button id="savePresetBtn" class="small-btn">💾 Save current as default</button>
+        <button id="loadPresetBtn" class="small-btn">📂 Load saved default</button>
+        <button id="exportPresetBtn" class="small-btn">⬇️ Export preset (file)</button>
+        <button id="importPresetBtn" class="small-btn">⬆️ Import preset (file)</button>
+        <input type="file" id="importFileInput" accept="application/json" style="display:none" />
+        <span id="presetStatus" class="preset-status"></span>
+      </div>
+    </div>
+
+    <!-- 4. Output -->
+    <div class="card">
+      <h2>4. Generate &amp; copy</h2>
+      <div class="btn-row">
+        <button id="generateBtn" class="primary">Generate Discord message</button>
+        <button id="copyBtn">Copy to clipboard</button>
+      </div>
+      <div class="footer-note">
+        You can still tweak the text in the box before copying if you want.
+      </div>
+      <h2 style="margin-top:1rem;">Preview</h2>
+      <textarea id="output"></textarea>
+    </div>
+  </div>
+
+  <script>
+    const showsContainer = document.getElementById("showsContainer");
+    const scheduleContainer = document.getElementById("scheduleContainer");
+    const outputEl = document.getElementById("output");
+    const presetStatus = document.getElementById("presetStatus");
+    const weekModeSelect = document.getElementById("weekMode");
+    const customWeekWrapper = document.getElementById("customWeekWrapper");
+    const customWeekLabelInput = document.getElementById("customWeekLabel");
+    const weekPreview = document.getElementById("weekPreview");
+    const toggleShowsBtn = document.getElementById("toggleShowsBtn");
+    const showSectionBody = document.getElementById("showSectionBody");
+
+    const importFileInput = document.getElementById("importFileInput");
+
+    const PRESET_KEY = "discordSchedulePreset_v10";
+
+    let draggedCard = null;
+
+    // ---------- Week helpers ----------
+
+    function getISOWeekInfo(date) {
+      const tmp = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+      const dayNum = tmp.getUTCDay() || 7; // Mon=1..Sun=7
+      tmp.setUTCDate(tmp.getUTCDate() + 4 - dayNum); // Thursday of this ISO week
+
+      const weekYear = tmp.getUTCFullYear();
+      const yearStart = new Date(Date.UTC(weekYear, 0, 1));
+      const week = Math.ceil(((tmp - yearStart) / 86400000 + 1) / 7);
+
+      const weekStart = new Date(tmp);
+      const startDay = weekStart.getUTCDay() || 7;
+      weekStart.setUTCDate(weekStart.getUTCDate() - (startDay - 1)); // Monday
+
+      const weekEnd = new Date(weekStart);
+      weekEnd.setUTCDate(weekEnd.getUTCDate() + 6); // Sunday
+
+      return {
+        year: weekYear,
+        week,
+        start: weekStart,
+        end: weekEnd
+      };
+    }
+
+    function formatWeekRange(start, end, labelYear) {
+      const s = new Date(start.getTime());
+      const e = new Date(end.getTime());
+      const months = [
+        "January","February","March","April","May","June",
+        "July","August","September","October","November","December"
+      ];
+
+      const sDay = s.getDate();
+      const eDay = e.getDate();
+      const sMonth = months[s.getMonth()];
+      const eMonth = months[e.getMonth()];
+      const sYear = s.getFullYear();
+      const eYear = e.getFullYear();
+
+      if (sYear === labelYear && eYear === labelYear && s.getMonth() === e.getMonth()) {
+        return `${sDay}–${eDay} ${sMonth}`;
+      }
+      if (sYear === labelYear && eYear === labelYear) {
+        return `${sDay} ${sMonth} – ${eDay} ${eMonth}`;
+      }
+      return `${sDay} ${sMonth} ${sYear} – ${eDay} ${eMonth} ${eYear}`;
+    }
+
+    function getWeekLabel() {
+      const mode = weekModeSelect.value;
+      if (mode === "custom") {
+        return customWeekLabelInput.value.trim();
+      }
+
+      const today = new Date();
+      let base = new Date(today.getTime());
+      if (mode === "next") {
+        base.setDate(base.getDate() + 7);
+      }
+
+      const info = getISOWeekInfo(base);
+      const rangeText = formatWeekRange(info.start, info.end, info.year);
+      return `${info.year} Week ${info.week} (${rangeText})`;
+    }
+
+    function getWeekStartLocalForCurrentMode() {
+      const mode = weekModeSelect.value;
+      if (mode === "custom") return null;
+
+      const today = new Date();
+      let base = new Date(today.getTime());
+      if (mode === "next") {
+        base.setDate(base.getDate() + 7);
+      }
+
+      const info = getISOWeekInfo(base);
+      return new Date(
+        info.start.getUTCFullYear(),
+        info.start.getUTCMonth(),
+        info.start.getUTCDate()
+      );
+    }
+
+    function updateWeekPreview() {
+      const label = getWeekLabel();
+      if (label) {
+        weekPreview.textContent = `Preview: ${label} Schedule`;
+      } else {
+        weekPreview.textContent = "";
+      }
+      updateAllPreviews();
+    }
+
+    // ---------- Show helpers ----------
+
+    function getShowsFromDOM() {
+      const showCards = showsContainer.querySelectorAll(".show-card");
+      const shows = [];
+      showCards.forEach(card => {
+        shows.push({
+          name: card.querySelector(".show-name").value.trim(),
+          emoji: card.querySelector(".show-emoji").value.trim(),
+          regularDay: card.querySelector(".show-regular-day").value, // "" or "0".."6"
+          regularTime: card.querySelector(".show-regular-time").value, // "" or "HH:MM"
+          description: card.querySelector(".show-description").value.trim(),
+          defaultDuration: card.querySelector(".show-duration").value.trim()
+        });
+      });
+      return shows;
+    }
+
+    function rebuildScheduleShowOptions() {
+      const shows = getShowsFromDOM();
+      const scheduleCards = scheduleContainer.querySelectorAll(".schedule-card");
+
+      scheduleCards.forEach(card => {
+        const select = card.querySelector(".schedule-show-select");
+        const prev = select.value;
+        select.innerHTML = "";
+        const placeholder = document.createElement("option");
+        placeholder.value = "";
+        placeholder.textContent = "— Select show —";
+        select.appendChild(placeholder);
+
+        shows.forEach((show, idx) => {
+          const opt = document.createElement("option");
+          opt.value = String(idx);
+          opt.textContent = show.name || `Show ${idx + 1}`;
+          select.appendChild(opt);
+        });
+
+        if (prev && Number(prev) < shows.length) {
+          select.value = prev;
+        } else {
+          select.value = "";
+        }
+      });
+
+      updateAllPreviews();
+    }
+
+    function numberToDiscordEmoji(n) {
+      const words = ["zero","one","two","three","four","five","six","seven","eight","nine","ten"];
+      if (n >= 1 && n <= 10) {
+        return `:${words[n]}:`;
+      }
+      return null;
+    }
+
+    function formatHumanDate(dt) {
+      const days = ["Mon","Tue","Wed","Thu","Fri","Sat","Sun"];
+      const monthsShort = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+      const dayName = days[(dt.getDay() + 6) % 7]; // convert JS 0-6 (Sun-Sat) to Mon-Sun index
+      const dateNum = dt.getDate();
+      const monthName = monthsShort[dt.getMonth()];
+      const year = dt.getFullYear();
+      let hours = dt.getHours();
+      const minutes = dt.getMinutes();
+      const ampm = hours >= 12 ? "pm" : "am";
+      hours = hours % 12;
+      if (hours === 0) hours = 12;
+      const pad = n => (n < 10 ? "0" + n : "" + n);
+      return `${dayName} ${dateNum} ${monthName} ${year}, ${hours}:${pad(minutes)} ${ampm}`;
+    }
+
+    // ---------- Shows UI ----------
+
+    function createShowCard(index, data = {}) {
+      const card = document.createElement("div");
+      card.className = "show-card";
+      card.dataset.index = index;
+
+      card.innerHTML = `
+        <div class="show-header">
+          <div class="show-title">Show</div>
+          <div style="display:flex;gap:0.5rem;align-items:center;">
+            <span class="tag">Preset</span>
+            <button type="button" class="small-btn remove-show-btn">Remove</button>
+          </div>
+        </div>
+        <div class="row">
+          <div>
+            <label>Name</label>
+            <input type="text" class="show-name" placeholder="e.g. Red Herring" />
+          </div>
+          <div>
+            <label>Emoji</label>
+            <input type="text" class="show-emoji" placeholder="e.g. :mag_right:" />
+          </div>
+        </div>
+        <div class="row">
+          <div>
+            <label>Regular day of week</label>
+            <select class="show-regular-day">
+              <option value="">— None / not set —</option>
+              <option value="0">Monday</option>
+              <option value="1">Tuesday</option>
+              <option value="2">Wednesday</option>
+              <option value="3">Thursday</option>
+              <option value="4">Friday</option>
+              <option value="5">Saturday</option>
+              <option value="6">Sunday</option>
+            </select>
+          </div>
+          <div>
+            <label>Regular time</label>
+            <input type="time" class="show-regular-time" />
+          </div>
+        </div>
+        <div class="row">
+          <div>
+            <label>Description (no brackets)</label>
+            <input type="text" class="show-description"
+              placeholder='e.g. continuing our **Blue Prince** playthrough' />
+          </div>
+        </div>
+        <div class="row">
+          <div>
+            <label>Default duration</label>
+            <input type="text" class="show-duration" placeholder="e.g. 2–3 hours" />
+          </div>
+        </div>
+      `;
+
+      if (data.name) card.querySelector(".show-name").value = data.name;
+      if (data.emoji) card.querySelector(".show-emoji").value = data.emoji;
+      if (data.regularDay !== undefined && data.regularDay !== null && data.regularDay !== "") {
+        card.querySelector(".show-regular-day").value = String(data.regularDay);
+      }
+      if (data.regularTime) {
+        card.querySelector(".show-regular-time").value = data.regularTime;
+      }
+      if (data.description) {
+        card.querySelector(".show-description").value = data.description;
+      }
+      if (data.defaultDuration) card.querySelector(".show-duration").value = data.defaultDuration;
+
+      card.querySelector(".remove-show-btn").addEventListener("click", () => {
+        showsContainer.removeChild(card);
+        rebuildScheduleShowOptions();
+      });
+
+      card.querySelector(".show-regular-day").addEventListener("change", updateAllPreviews);
+      card.querySelector(".show-regular-time").addEventListener("change", updateAllPreviews);
+
+      return card;
+    }
+
+    function addShow(initialData) {
+      const index = showsContainer.querySelectorAll(".show-card").length;
+      const card = createShowCard(index, initialData);
+      showsContainer.appendChild(card);
+      rebuildScheduleShowOptions();
+    }
+
+    // ---------- Schedule UI ----------
+
+    function createScheduleCard(index, data = {}) {
+      const card = document.createElement("div");
+
+      card.className = "schedule-card";
+      card.dataset.index = index;
+      card.setAttribute("draggable", "true");
+
+      card.innerHTML = `
+        <div class="schedule-header">
+          <div class="schedule-title">
+            <span class="drag-handle" title="Drag to reorder">☰</span>
+            Stream <span class="schedule-number">#${index + 1}</span>
+          </div>
+          <div style="display:flex;gap:0.5rem;align-items:center;">
+            <button type="button" class="small-btn remove-schedule-btn">Remove</button>
+          </div>
+        </div>
+        <div class="row">
+          <div>
+            <label>Show</label>
+            <select class="schedule-show-select">
+              <option value="">— Select show —</option>
+            </select>
+          </div>
+          <div>
+            <label>Duration (override)</label>
+            <input type="text" class="schedule-duration" placeholder="e.g. 2–3 hours" />
+          </div>
+        </div>
+        <div class="row">
+          <div>
+            <label>Override day of week (optional)</label>
+            <select class="schedule-day-override">
+              <option value="">Use show's regular day</option>
+              <option value="0">Monday</option>
+              <option value="1">Tuesday</option>
+              <option value="2">Wednesday</option>
+              <option value="3">Thursday</option>
+              <option value="4">Friday</option>
+              <option value="5">Saturday</option>
+              <option value="6">Sunday</option>
+            </select>
+          </div>
+          <div>
+            <label>Override time (optional)</label>
+            <input type="time" class="schedule-time-override" />
+          </div>
+        </div>
+        <div class="schedule-preview"></div>
+      `;
+
+      scheduleContainer.appendChild(card);
+      updateScheduleNumbers();
+      rebuildScheduleShowOptions();
+
+      const select = card.querySelector(".schedule-show-select");
+      const durInput = card.querySelector(".schedule-duration");
+      const dayOverride = card.querySelector(".schedule-day-override");
+      const timeOverride = card.querySelector(".schedule-time-override");
+
+      if (typeof data.showIndex === "number") {
+        select.value = String(data.showIndex);
+      }
+      if (data.duration) {
+        durInput.value = data.duration;
+      }
+      if (data.dayOverride !== undefined && data.dayOverride !== null && data.dayOverride !== "") {
+        dayOverride.value = String(data.dayOverride);
+      }
+      if (data.timeOverride) {
+        timeOverride.value = data.timeOverride;
+      }
+
+      select.addEventListener("change", () => {
+        const shows = getShowsFromDOM();
+        const idx = Number(select.value);
+        if (!Number.isNaN(idx) && idx >= 0 && idx < shows.length) {
+          const show = shows[idx];
+          if (!durInput.value.trim() && show.defaultDuration) {
+            durInput.value = show.defaultDuration;
+          }
+        }
+        updateSlotPreview(card);
+      });
+
+      dayOverride.addEventListener("change", () => updateSlotPreview(card));
+      timeOverride.addEventListener("change", () => updateSlotPreview(card));
+
+      card.querySelector(".remove-schedule-btn").addEventListener("click", () => {
+        scheduleContainer.removeChild(card);
+        updateScheduleNumbers();
+        updateAllPreviews();
+      });
+
+      card.addEventListener("dragstart", (e) => {
+        draggedCard = card;
+        card.classList.add("dragging");
+        e.dataTransfer.effectAllowed = "move";
+      });
+
+      card.addEventListener("dragend", () => {
+        if (draggedCard) {
+          draggedCard.classList.remove("dragging");
+          draggedCard = null;
+          updateScheduleNumbers();
+          updateAllPreviews();
+        }
+      });
+
+      card.addEventListener("dragover", (e) => {
+        e.preventDefault();
+        if (!draggedCard || draggedCard === card) return;
+
+        const bounding = card.getBoundingClientRect();
+        const offset = e.clientY - bounding.top;
+        const midway = bounding.height / 2;
+
+        if (offset < midway) {
+          scheduleContainer.insertBefore(draggedCard, card);
+        } else {
+          scheduleContainer.insertBefore(draggedCard, card.nextSibling);
+        }
+      });
+
+      updateSlotPreview(card);
+      return card;
+    }
+
+    function updateScheduleNumbers() {
+      const scheduleCards = scheduleContainer.querySelectorAll(".schedule-card");
+      scheduleCards.forEach((card, idx) => {
+        card.dataset.index = idx;
+        card.querySelector(".schedule-number").textContent = `#${idx + 1}`;
+      });
+    }
+
+    function addSchedule(initialData = {}) {
+      const index = scheduleContainer.querySelectorAll(".schedule-card").length;
+      createScheduleCard(index, initialData);
+    }
+
+    // ---------- Compute final datetime for a slot ----------
+
+    function computeSlotDate(card) {
+      const select = card.querySelector(".schedule-show-select");
+      if (!select.value) return null;
+
+      const shows = getShowsFromDOM();
+      const showIndex = Number(select.value);
+      if (Number.isNaN(showIndex) || showIndex < 0 || showIndex >= shows.length) return null;
+
+      const show = shows[showIndex];
+
+      let weekStart = getWeekStartLocalForCurrentMode();
+      if (!weekStart) {
+        const today = new Date();
+        const jsDay = today.getDay(); // 0=Sun..6=Sat
+        const offsetToMonday = (jsDay + 6) % 7;
+        weekStart = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+        weekStart.setDate(weekStart.getDate() - offsetToMonday);
+      }
+
+      const dayOverrideSel = card.querySelector(".schedule-day-override").value;
+      const timeOverrideVal = card.querySelector(".schedule-time-override").value;
+
+      let baseDay = null;
+      if (show.regularDay !== "") {
+        baseDay = Number(show.regularDay);
+      }
+      if (Number.isNaN(baseDay) || baseDay === null) {
+        baseDay = 0; // Monday fallback
+      }
+
+      let baseTime = show.regularTime || "19:00";
+
+      const finalDay = dayOverrideSel !== "" ? Number(dayOverrideSel) : baseDay;
+      const finalTime = timeOverrideVal || baseTime;
+
+      if (Number.isNaN(finalDay) || finalDay < 0 || finalDay > 6) return null;
+
+      const [hStr, mStr] = finalTime.split(":");
+      const hours = Number(hStr);
+      const minutes = Number(mStr || "0");
+      if (Number.isNaN(hours) || Number.isNaN(minutes)) return null;
+
+      const dt = new Date(
+        weekStart.getFullYear(),
+        weekStart.getMonth(),
+        weekStart.getDate()
+      );
+      dt.setDate(dt.getDate() + finalDay);
+      dt.setHours(hours, minutes, 0, 0);
+      return dt;
+    }
+
+    function updateSlotPreview(card) {
+      const previewEl = card.querySelector(".schedule-preview");
+      const select = card.querySelector(".schedule-show-select");
+
+      if (!select.value) {
+        previewEl.textContent = "Preview: select a show to see day/time and timestamps.";
+        return;
+      }
+
+      const dt = computeSlotDate(card);
+      if (!dt) {
+        previewEl.textContent = "Preview: (no valid date/time; set regular day/time for this show or overrides).";
+        return;
+      }
+      const unix = Math.floor(dt.getTime() / 1000);
+      const human = formatHumanDate(dt);
+      previewEl.textContent =
+        `Preview: ${human}  →  <t:${unix}:F> / <t:${unix}:R>`;
+    }
+
+    function updateAllPreviews() {
+      const cards = scheduleContainer.querySelectorAll(".schedule-card");
+      cards.forEach(updateSlotPreview);
+    }
+
+    // ---------- Generate message ----------
+
+    function generateMessage() {
+      const weekLabel = getWeekLabel();
+      const lines = [];
+
+      if (weekLabel) {
+        lines.push(`**${weekLabel} Schedule**`);
+      } else {
+        lines.push(`**Stream Schedule**`);
+      }
+
+      lines.push(`Watch here :arrow_right: https://twitch.tv/vincentleet`);
+      lines.push("");
+
+      const shows = getShowsFromDOM();
+      const scheduleCards = scheduleContainer.querySelectorAll(".schedule-card");
+
+      scheduleCards.forEach((card, idx) => {
+        const select = card.querySelector(".schedule-show-select");
+        const durationOverride = card.querySelector(".schedule-duration").value.trim();
+
+        if (!select.value) return;
+
+        const showIndex = Number(select.value);
+        if (Number.isNaN(showIndex) || showIndex < 0 || showIndex >= shows.length) return;
+
+        const show = shows[showIndex];
+        if (!show.name) return;
+
+        const dt = computeSlotDate(card);
+        if (!dt || isNaN(dt.getTime())) return;
+        const unix = Math.floor(dt.getTime() / 1000);
+
+        const streamNumber = idx + 1;
+        const numEmoji = numberToDiscordEmoji(streamNumber);
+        const labelParts = ["Stream"];
+        if (numEmoji) {
+          labelParts.push(numEmoji);
+        } else {
+          labelParts.push(`#${streamNumber}`);
+        }
+        if (show.emoji) {
+          labelParts.push(show.emoji);
+        }
+
+        const labelLine = labelParts.join(" ");
+
+        const safeTitle = `**${show.name}**`;
+        const descSegment = show.description
+          ? ` (${show.description})`
+          : "";
+        const fullTitleLine = safeTitle + descSegment;
+
+        const durationText = durationOverride || show.defaultDuration || "";
+        const durationSegment = durationText ? ` for ${durationText}` : "";
+
+        const detailLine =
+          `${fullTitleLine} on <t:${unix}:F>${durationSegment} (that's <t:${unix}:R>)`;
+
+        lines.push(labelLine);
+        lines.push(detailLine);
+        lines.push("");
+      });
+
+      outputEl.value = lines.join("\n").trim() + "\n";
+    }
+
+    // ---------- Copy helpers ----------
+
+    function fallbackCopy(text) {
+      outputEl.focus();
+      outputEl.select();
+      try {
+        document.execCommand("copy");
+        showPresetStatus("Copied to clipboard ✅");
+      } catch (e) {
+        showPresetStatus("Copy failed – select and copy manually.");
+      }
+    }
+
+    function copyToClipboard() {
+      const text = outputEl.value;
+      if (!text) return;
+
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text)
+          .then(() => showPresetStatus("Copied to clipboard ✅"))
+          .catch(() => fallbackCopy(text));
+      } else {
+        fallbackCopy(text);
+      }
+    }
+
+    // ---------- Preset helpers (build/apply) ----------
+
+    function getCurrentPreset() {
+      const preset = {
+        weekMode: weekModeSelect.value,
+        customWeekLabel: customWeekLabelInput.value,
+        shows: getShowsFromDOM(),
+        schedule: []
+      };
+
+      const scheduleCards = scheduleContainer.querySelectorAll(".schedule-card");
+      scheduleCards.forEach(card => {
+        const select = card.querySelector(".schedule-show-select");
+        const durValue = card.querySelector(".schedule-duration").value;
+        const dayOverride = card.querySelector(".schedule-day-override").value;
+        const timeOverride = card.querySelector(".schedule-time-override").value;
+
+        preset.schedule.push({
+          showIndex: select.value === "" ? null : Number(select.value),
+          duration: durValue,
+          dayOverride: dayOverride === "" ? null : Number(dayOverride),
+          timeOverride: timeOverride || null
+        });
+      });
+
+      return preset;
+    }
+
+    function applyPreset(preset) {
+      if (!preset || typeof preset !== "object") {
+        showPresetStatus("Invalid preset.");
+        return;
+      }
+
+      weekModeSelect.value = preset.weekMode || "current";
+      customWeekLabelInput.value = preset.customWeekLabel || customWeekLabelInput.value;
+      toggleCustomWeek();
+      updateWeekPreview();
+
+      showsContainer.innerHTML = "";
+      (preset.shows || []).forEach(s => addShow(s));
+      if (!preset.shows || !preset.shows.length) {
+        addDefaultShows();
+      }
+
+      scheduleContainer.innerHTML = "";
+      const schedule = preset.schedule || [];
+      if (schedule.length) {
+        schedule.forEach(s => {
+          addSchedule({
+            showIndex: typeof s.showIndex === "number" ? s.showIndex : null,
+            duration: s.duration || "",
+            dayOverride: s.dayOverride,
+            timeOverride: s.timeOverride
+          });
+        });
+      } // else: leave Section 3 empty by default
+
+      rebuildScheduleShowOptions();
+      showPresetStatus("Preset applied ✅");
+    }
+
+    // ---------- Preset save/load (localStorage) ----------
+
+    function savePreset() {
+      const preset = getCurrentPreset();
+      localStorage.setItem(PRESET_KEY, JSON.stringify(preset));
+      showPresetStatus("Default layout saved 💾");
+    }
+
+    function loadPreset() {
+      const raw = localStorage.getItem(PRESET_KEY);
+      if (!raw) {
+        showPresetStatus("No preset saved yet.");
+        return;
+      }
+
+      try {
+        const preset = JSON.parse(raw);
+        applyPreset(preset);
+      } catch (e) {
+        showPresetStatus("Error loading preset.");
+      }
+    }
+
+    function showPresetStatus(msg) {
+      presetStatus.textContent = msg;
+      if (!msg) return;
+      setTimeout(() => {
+        if (presetStatus.textContent === msg) {
+          presetStatus.textContent = "";
+        }
+      }, 2500);
+    }
+
+    // ---------- Export / Import to file ----------
+
+    function exportPresetToFile() {
+      const preset = getCurrentPreset();
+      const blob = new Blob([JSON.stringify(preset, null, 2)], {
+        type: "application/json"
+      });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "leet-schedule-preset.json";
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      showPresetStatus("Preset exported ⬇️");
+    }
+
+    function importPresetFromFile(file) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        try {
+          const preset = JSON.parse(e.target.result);
+          applyPreset(preset);
+        } catch (err) {
+          showPresetStatus("Error reading preset file.");
+        }
+      };
+      reader.readAsText(file);
+    }
+
+    // ---------- Defaults ----------
+
+    function addDefaultShows() {
+      addShow({
+        name: "Red Herring",
+        emoji: ":mag_right:",
+        regularDay: "4",   // Friday
+        regularTime: "20:00", // 8pm
+        description: "continuing our **Blue Prince** playthrough",
+        defaultDuration: "2–3 hours"
+      });
+      addShow({
+        name: "The Guestbook",
+        emoji: ":closed_book:",
+        regularDay: "3",   // Thursday
+        regularTime: "20:00", // 8pm
+        description: "our Habbo Origins stream",
+        defaultDuration: "2–3 hours"
+      });
+      addShow({
+        name: "A Trainer's Journey",
+        emoji: "⚡️",
+        regularDay: "5",   // Saturday
+        regularTime: "08:00", // 8am
+        description: "continuing our **Pokémon: Legends Z-A** playthrough",
+        defaultDuration: "2–3 hours"
+      });
+    }
+
+    // ---------- Week mode toggle ----------
+
+    function toggleCustomWeek() {
+      if (weekModeSelect.value === "custom") {
+        customWeekWrapper.style.display = "";
+      } else {
+        customWeekWrapper.style.display = "none";
+      }
+    }
+
+    // ---------- Show section collapse ----------
+
+    function toggleShowSection() {
+      const isHidden = showSectionBody.style.display === "none";
+      showSectionBody.style.display = isHidden ? "" : "none";
+      toggleShowsBtn.textContent = isHidden ? "Hide" : "Show";
+    }
+
+    // ---------- Event listeners ----------
+
+    document.getElementById("addShowBtn").addEventListener("click", () => addShow());
+    document.getElementById("addScheduleBtn").addEventListener("click", () => addSchedule());
+    document.getElementById("generateBtn").addEventListener("click", () => {
+      generateMessage();
+      updateAllPreviews();
+    });
+    document.getElementById("copyBtn").addEventListener("click", copyToClipboard);
+    document.getElementById("savePresetBtn").addEventListener("click", savePreset);
+    document.getElementById("loadPresetBtn").addEventListener("click", loadPreset);
+    document.getElementById("exportPresetBtn").addEventListener("click", exportPresetToFile);
+    document.getElementById("importPresetBtn").addEventListener("click", () => {
+      importFileInput.click();
+    });
+    importFileInput.addEventListener("change", (e) => {
+      const file = e.target.files && e.target.files[0];
+      if (file) {
+        importPresetFromFile(file);
+        importFileInput.value = ""; // reset for next time
+      }
+    });
+
+    weekModeSelect.addEventListener("change", () => {
+      toggleCustomWeek();
+      updateWeekPreview();
+    });
+    customWeekLabelInput.addEventListener("input", updateWeekPreview);
+    toggleShowsBtn.addEventListener("click", toggleShowSection);
+
+    // ---------- Init ----------
+
+    window.addEventListener("DOMContentLoaded", () => {
+      toggleCustomWeek();
+      const raw = localStorage.getItem(PRESET_KEY);
+      if (raw) {
+        loadPreset();
+      } else {
+        addDefaultShows();
+        // Section 3 empty by default – no addDefaultSchedule()
+        rebuildScheduleShowOptions();
+        updateWeekPreview();
+      }
+    });
+  </script>
+</body>
+</html>
