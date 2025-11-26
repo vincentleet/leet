@@ -217,10 +217,6 @@
             <option value="next">Next week (auto)</option>
             <option value="custom">Custom label</option>
           </select>
-          <div class="small">
-            Auto modes use your system timezone (set to <strong>Pacific/Auckland</strong>) and produce labels like
-            <code>2025 Week 46 (10–16 November)</code>.
-          </div>
           <div class="small" id="weekPreview" style="margin-top:0.25rem;font-weight:500;"></div>
         </div>
       </div>
@@ -234,18 +230,15 @@
           </div>
         </div>
       </div>
-      <div class="small">
-        Twitch link is fixed to <code>https://twitch.tv/vincentleet</code>.
-      </div>
     </div>
 
     <!-- 2. Show definitions -->
     <div class="card">
       <div class="section-header-row">
         <h2>2. Show details</h2>
-        <button id="toggleShowsBtn" class="small-btn">Hide</button>
+        <button id="toggleShowsBtn" class="small-btn">Show</button>
       </div>
-      <div id="showSectionBody">
+      <div id="showSectionBody" style="display:none;">
         <p class="small">
           Define each <strong>show</strong> once (name, emoji, <strong>regular day + time</strong>, description, default duration).
           In the schedule, we’ll use these regular settings unless you override them for a specific stream.
@@ -262,16 +255,13 @@
       <h2>3. Schedule (streams &amp; times)</h2>
       <p class="small">
         Each slot chooses a show. If you leave the overrides empty, it uses that show’s regular day/time
-        from Section 2. The preview shows the exact date & Discord timestamps for the selected week.
+        from Section 2. The preview shows the exact date &amp; Discord timestamps for the selected week.
       </p>
       <div id="scheduleContainer"></div>
       <div class="btn-row">
         <button id="addScheduleBtn">+ Add stream slot</button>
         <button id="savePresetBtn" class="small-btn">💾 Save current as default</button>
         <button id="loadPresetBtn" class="small-btn">📂 Load saved default</button>
-        <button id="exportPresetBtn" class="small-btn">⬇️ Export preset (file)</button>
-        <button id="importPresetBtn" class="small-btn">⬆️ Import preset (file)</button>
-        <input type="file" id="importFileInput" accept="application/json" style="display:none" />
         <span id="presetStatus" class="preset-status"></span>
       </div>
     </div>
@@ -302,8 +292,6 @@
     const weekPreview = document.getElementById("weekPreview");
     const toggleShowsBtn = document.getElementById("toggleShowsBtn");
     const showSectionBody = document.getElementById("showSectionBody");
-
-    const importFileInput = document.getElementById("importFileInput");
 
     const PRESET_KEY = "discordSchedulePreset_v10";
 
@@ -521,14 +509,12 @@
           </div>
         </div>
         <div class="row">
-          <div>
-            <label>Description (no brackets)</label>
+          <div style="flex: 2;">
+            <label>Description</label>
             <input type="text" class="show-description"
               placeholder='e.g. continuing our **Blue Prince** playthrough' />
           </div>
-        </div>
-        <div class="row">
-          <div>
+          <div style="flex: 1;">
             <label>Default duration</label>
             <input type="text" class="show-duration" placeholder="e.g. 2–3 hours" />
           </div>
@@ -938,7 +924,7 @@
             timeOverride: s.timeOverride
           });
         });
-      } // else: leave Section 3 empty by default
+      }
 
       rebuildScheduleShowOptions();
       showPresetStatus("Preset applied ✅");
@@ -977,37 +963,6 @@
       }, 2500);
     }
 
-    // ---------- Export / Import to file ----------
-
-    function exportPresetToFile() {
-      const preset = getCurrentPreset();
-      const blob = new Blob([JSON.stringify(preset, null, 2)], {
-        type: "application/json"
-      });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = "leet-schedule-preset.json";
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-      showPresetStatus("Preset exported ⬇️");
-    }
-
-    function importPresetFromFile(file) {
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        try {
-          const preset = JSON.parse(e.target.result);
-          applyPreset(preset);
-        } catch (err) {
-          showPresetStatus("Error reading preset file.");
-        }
-      };
-      reader.readAsText(file);
-    }
-
     // ---------- Defaults ----------
 
     function addDefaultShows() {
@@ -1024,7 +979,7 @@
         emoji: ":closed_book:",
         regularDay: "3",   // Thursday
         regularTime: "20:00", // 8pm
-        description: "our **Habbo Origins** stream",
+        description: "our Habbo Origins stream",
         defaultDuration: "2–3 hours"
       });
       addShow({
@@ -1066,18 +1021,6 @@
     document.getElementById("copyBtn").addEventListener("click", copyToClipboard);
     document.getElementById("savePresetBtn").addEventListener("click", savePreset);
     document.getElementById("loadPresetBtn").addEventListener("click", loadPreset);
-    document.getElementById("exportPresetBtn").addEventListener("click", exportPresetToFile);
-    document.getElementById("importPresetBtn").addEventListener("click", () => {
-      importFileInput.click();
-    });
-    importFileInput.addEventListener("change", (e) => {
-      const file = e.target.files && e.target.files[0];
-      if (file) {
-        importPresetFromFile(file);
-        importFileInput.value = ""; // reset for next time
-      }
-    });
-
     weekModeSelect.addEventListener("change", () => {
       toggleCustomWeek();
       updateWeekPreview();
@@ -1094,7 +1037,7 @@
         loadPreset();
       } else {
         addDefaultShows();
-        // Section 3 empty by default – no addDefaultSchedule()
+        // Section 3 empty by default – no default schedule
         rebuildScheduleShowOptions();
         updateWeekPreview();
       }
