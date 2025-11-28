@@ -363,12 +363,13 @@
       justify-content: center;
       z-index: 30;
       color: #fff;
+      text-align: center;
     }
     .call-card {
       display: flex;
       flex-direction: column;
       align-items: center;
-      gap: 16px;
+      gap: 12px;
     }
     .call-label {
       font-size: 14px;
@@ -401,8 +402,45 @@
       object-fit: cover;
       display: block;
     }
+
+    /* Call controls: speaker + end button */
+    .call-controls {
+      margin-top: 8px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 24px;
+    }
+
+    .call-speaker {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 12px;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,0.6);
+      background: rgba(255,255,255,0.18);
+      font-size: 12px;
+      opacity: 0.95;
+    }
+    .call-speaker svg {
+      width: 18px;
+      height: 18px;
+      fill: #ffffff;
+    }
+    .call-speaker-label {
+      display: flex;
+      gap: 4px;
+      align-items: baseline;
+    }
+    .call-speaker-label span:first-child {
+      font-weight: 500;
+    }
+    .call-speaker-label span:last-child {
+      opacity: 0.8;
+    }
+
     .call-end-pill {
-      margin-top: 16px;
       width: 52px;
       height: 52px;
       border-radius: 50%;
@@ -479,78 +517,78 @@
     <!-- Static messages with offsets -->
     <div class="message-row them">
       <div class="bubble them" data-offset="0">
-        <span>Hey u guys in the restaurant yet?</span>
+        <span>Hey, are you guys inside the restaurant yet?</span>
         <div class="meta-line"><span class="time"></span></div>
       </div>
     </div>
 
     <div class="message-row them">
       <div class="bubble them" data-offset="2">
-        <span>Whats going on in there, did you find anything yet?</span>
+        <span>What’s happening in there? Did you find anything?</span>
         <div class="meta-line"><span class="time"></span></div>
       </div>
     </div>
 
     <div class="message-row them">
       <div class="bubble them" data-offset="4">
-        <span>Hellooo</span>
+        <span>Helloooo?</span>
         <div class="meta-line"><span class="time"></span></div>
       </div>
     </div>
 
     <div class="message-row them">
       <div class="bubble them" data-offset="7">
-        <span>Guys why aren't you responding?</span>
+        <span>Guys, why aren’t you replying?</span>
         <div class="meta-line"><span class="time"></span></div>
       </div>
     </div>
 
     <div class="message-row them">
       <div class="bubble them" data-offset="10">
-        <span>Is everything alright?</span>
+        <span>Is everything okay?</span>
         <div class="meta-line"><span class="time"></span></div>
       </div>
     </div>
 
     <div class="system call" data-offset="60">
-      <span>Missed call from Johnny</span>
+      <span>Missed voice call from Johnny</span>
       <span class="time-inline"></span>
     </div>
 
     <div class="message-row them">
       <div class="bubble them" data-offset="61">
-        <span>I've been trying to reach you for almost an hour! I tried to get in but the door is locked. Missed call from Johnny</span>
+        <span>I’ve been trying to reach you for almost an hour. I tried to get in, but the door’s locked.</span>
         <div class="meta-line"><span class="time"></span></div>
       </div>
     </div>
 
     <!-- Second missed call + immediate extra one -->
     <div class="system call" data-offset="62">
-      <span>Missed call from Johnny</span>
+      <span>Missed voice call from Johnny</span>
       <span class="time-inline"></span>
     </div>
     <div class="system call" data-offset="63">
-      <span>Missed call from Johnny</span>
+      <span>Missed voice call from Johnny</span>
       <span class="time-inline"></span>
     </div>
 
     <div class="message-row them">
       <div class="bubble them" data-offset="73">
-        <span>Seems like your phone is dead...</span>
+        <span>Pretty sure your phone is dead by now…</span>
         <div class="meta-line"><span class="time"></span></div>
       </div>
     </div>
 
     <div class="message-row them">
       <div class="bubble them" data-offset="74">
-        <span>I hope you guys found the stolen goods by now! We need to decide what we are doing with them.</span>
+        <span>I really hope you found the stolen diamonds. We need to decide what we’re doing with it.</span>
         <div class="meta-line"><span class="time"></span></div>
       </div>
     </div>
 
     <div class="message-row them">
       <div class="bubble them" data-offset="76">
-        <span>I might be able to get the code to get out of the restaurant from one of the cooks that I know there. Should we try to keep the money for ourselves? Or should we call the police to notify them of what we found? I'm on the fence, you choose, but decide fast before the gagsters get back!</span>
+        <span>I know one of the cooks here, I might be able to get the code to unlock the door. Do we keep the diamonds and try to slip out, or call the police and tell them everything? I’m torn, you decide, but hurry, before the gangsters come back!</span>
         <div class="meta-line"><span class="time"></span></div>
       </div>
     </div>
@@ -592,12 +630,12 @@
     <div class="modal-body">
       <label class="radio-option">
         <input type="radio" name="decision" value="police">
-        <span>Call the police to report what you have found.</span>
+        <span>Call the police and report what you’ve found.</span>
       </label>
 
       <label class="radio-option">
         <input type="radio" name="decision" value="escape">
-        <span>Respond to Johnny telling him you want to attempt to escape with the stolen goods.</span>
+        <span>Tell Johnny you want to try escaping with the stolen diamonds.</span>
       </label>
     </div>
 
@@ -618,11 +656,25 @@
     </div>
     <div class="call-name">Rotorua Police</div>
     <div class="call-status" id="callStatus">00:00</div>
-    <div class="call-end-pill">
-      <svg viewBox="0 0 24 24">
-        <path d="M6.6 10.8c1.7 3.4 3.9 5.7 7.3 7.3l1.9-1.9c.4-.4 1-.5 1.5-.4l3 0.7c.6.1 1 .6 1 1.2v3
-        c0 .7-.6 1.3-1.3 1.3C11.4 21.9 2.1 12.6 2.1 2.9 2.1 2.2 2.7 1.6 3.4 1.6H6.4c.6 0 1.1.4 1.2 1l.7 3c.1.5 0 1.1-.4 1.5l-1.9 1.9z"/>
-      </svg>
+
+    <div class="call-controls">
+      <!-- Speaker ON indicator -->
+      <div class="call-speaker">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M11 5.5L7.5 9H4c-1.1 0-2 .9-2 2v2c0 1.1.9 2 2 2h3.5L11 18.5c.6.6 1 .4 1-.3V5.8c0-.7-.4-.9-1-.3zm4.1-.9a1 1 0 00-.3 1.4A6.02 6.02 0 0117 12c0 2-1 3.8-2.2 4.9a1 1 0 001.4 1.4A8.01 8.01 0 0019 12c0-2.4-1.1-4.6-2.8-6a1 1 0 00-1.1-.4zm-1.6 3.2a1 1 0 00-.2 1.4c.5.7.7 1.5.7 2.3s-.3 1.6-.7 2.3a1 1 0 001.6 1.2A5 5 0 0016 12a5 5 0 00-1.1-3.3 1 1 0 00-1.4-.3z"/>
+        </svg>
+        <div class="call-speaker-label">
+          <span>Speaker</span>
+          <span>On</span>
+        </div>
+      </div>
+
+      <div class="call-end-pill">
+        <svg viewBox="0 0 24 24">
+          <path d="M6.6 10.8c1.7 3.4 3.9 5.7 7.3 7.3l1.9-1.9c.4-.4 1-.5 1.5-.4l3 0.7c.6.1 1 .6 1 1.2v3
+          c0 .7-.6 1.3-1.3 1.3C11.4 21.9 2.1 12.6 2.1 2.9 2.1 2.2 2.7 1.6 3.4 1.6H6.4c.6 0 1.1.4 1.2 1l.7 3c.1.5 0 1.1-.4 1.5l-1.9 1.9z"/>
+        </svg>
+      </div>
     </div>
   </div>
 </div>
@@ -819,13 +871,13 @@
 
   /* ---- Escape Branch Script (Johnny) ---- */
   const escapeScript = [
-    { sender: "me",   text: "Can you find us the code? We found more than we thought we would." },
-    { sender: "them", text: "Really? That's awesome!" },
-    { sender: "them", text: "I've managed to get the code to exit the restaurant from one of the cooks that works there." },
-    { sender: "them", text: "The code is 5291" },
-    { sender: "them", text: "Hurry up" },
-    { sender: "them", text: "The gangster are on their way, so get out of there!" },
-    { sender: "them", text: "I'm waiting outside for you" }
+    { sender: "me",   text: "Can you get us the door code? We found way more than we expected." },
+    { sender: "them", text: "Seriously? That’s insane." },
+    { sender: "them", text: "I talked to one of the cooks, I got the exit code for the restaurant." },
+    { sender: "them", text: "The code is 5291." },
+    { sender: "them", text: "Go, now!" },
+    { sender: "them", text: "The gangsters are on their way back, you need to get out of there!" },
+    { sender: "them", text: "I’m waiting outside for you!" }
   ];
 
   function playEscapeSequence(index = 0) {
@@ -851,9 +903,9 @@
 
   const policeScript = [
     "Thank you for reporting the robbery.",
-    "You may exit the restaurant by using the following code: 5291",
-    "We have dispatched a police squad to come meet you outside the restaurant.",
-    "Please get out of there as quickly as possible for your own safety."
+    "You can exit the restaurant using this code: 5291",
+    "A police car is on its way to meet you outside the restaurant.",
+    "Leave the building as quickly as you can for your own safety."
   ];
 
   function startPoliceChat() {
@@ -956,7 +1008,7 @@
       }, 1000);
     }, 5000);
 
-    // After 11s total (5s ring + 1s delay + call time), hang up and go to chat
+    // After 14s total (5s ring + 1s delay + 8s call), hang up and go to chat
     setTimeout(() => {
       if (callTimerInterval) {
         clearInterval(callTimerInterval);
@@ -982,7 +1034,7 @@
       showToast("Call ended");
 
       startPoliceChat();
-    }, 11000);
+    }, 14000); // <-- was 11000, now 14000
   }
 
   /* ---- Modal ---- */
