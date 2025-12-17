@@ -852,10 +852,43 @@
   const callOverlay = document.getElementById("callOverlay");
   const callStatusEl = document.getElementById("callStatus");
   const callLabelEl = document.getElementById("callLabel");
-  const ringAudio = null;
-  const callAudio  = document.getElementById("callAudio");
+  
+  const callAudio = document.getElementById("callAudio");
   let audioUnlocked = false;
-  const endAudio  = null;
+
+  function unlockAudio() {
+    if (audioUnlocked) return;
+    try {
+      callAudio.src = "phone_ring.mp3";
+      callAudio.volume = 1;
+      callAudio.currentTime = 0;
+      callAudio.play();
+      audioUnlocked = true;
+    } catch (e) {}
+  }
+
+  function playRing() {
+    callAudio.src = "phone_ring.mp3";
+    callAudio.currentTime = 0;
+    callAudio.play();
+  }
+
+  function playCall() {
+    callAudio.src = "police_call.mp3";
+    callAudio.currentTime = 0;
+    callAudio.play();
+  }
+
+  function playEnd() {
+    callAudio.src = "phone_end.mp3";
+    callAudio.currentTime = 0;
+    callAudio.play();
+    setTimeout(() => {
+      callAudio.pause();
+      callAudio.currentTime = 0;
+    }, 1300);
+  }
+  
 
   const avatarEl = document.querySelector(".avatar");
   const chatNameEl = document.querySelector(".chat-name");
@@ -1140,6 +1173,7 @@
     setTimeout(() => {
       if (callLabelEl) callLabelEl.textContent = "Connected";
       if (callStatusEl) callStatusEl.textContent = "00:00";
+      playCall();
 
       let seconds = 0;
       callTimerInterval = setInterval(() => {
@@ -1177,9 +1211,7 @@
       // Play end-of-call sound for ~1.3 seconds
       if (endAudio) {
         try {
-          callAudio.src = "phone_end.mp3";
-          callAudio.currentTime = 0;
-          if (audioUnlocked) callAudio.play();
+          playEnd();
           setTimeout(() => {
             stopAudioSafe(callAudio);
           }, 1300); // stop after 1.3s
