@@ -854,6 +854,7 @@
   const callLabelEl = document.getElementById("callLabel");
   const ringAudio = null;
   const callAudio  = document.getElementById("callAudio");
+  let audioUnlocked = false;
   const endAudio  = null;
 
   const avatarEl = document.querySelector(".avatar");
@@ -1127,7 +1128,9 @@
       try {
         callAudio.src = "phone_ring.mp3";
         callAudio.currentTime = 0;
+        callAudio.volume = 1;
         callAudio.play();
+        audioUnlocked = true;
       } catch (e) {
         // ignore autoplay issues
       }
@@ -1151,6 +1154,8 @@
         if (callAudio) {
           try {
             callAudio.src = "police_call.mp3";
+          callAudio.currentTime = 0;
+          if (audioUnlocked) callAudio.play();
             // let it run until hangup
           } catch (e) {
             // ignore
@@ -1174,7 +1179,7 @@
         try {
           callAudio.src = "phone_end.mp3";
           callAudio.currentTime = 0;
-          callAudio.play();
+          if (audioUnlocked) callAudio.play();
           setTimeout(() => {
             stopAudioSafe(callAudio);
           }, 1300); // stop after 1.3s
