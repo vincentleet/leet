@@ -67,7 +67,7 @@
     }
 
     async function ensureAnonymousSession() {
-      const { data } = await supabase.auth.getSession();
+      const { data } = await supabaseClient.auth.getSession();
       if (!data.session) {
         await supabase.auth.signInAnonymously();
       }
