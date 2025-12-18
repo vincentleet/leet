@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Habbo Companion – Code Redemption</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    body {
+      font-family: system-ui, sans-serif;
+      background: #111;
+      color: #fff;
+      padding: 2rem;
+      max-width: 480px;
+      margin: auto;
+    }
+    input, button {
+      width: 100%;
+      padding: 0.75rem;
+      margin-top: 0.5rem;
+      font-size: 1rem;
+    }
+    button {
+      cursor: pointer;
+    }
+    .message {
+      margin-top: 1rem;
+      padding: 1rem;
+      background: #222;
+      border-radius: 6px;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>Enter Code</h1>
+
+  <input
+    id="codeInput"
+    type="text"
+    placeholder="Enter code"
+    autocomplete="off"
+  />
+
+  <button id="redeemBtn">Redeem</button>
+
+  <div id="message" class="message" style="display:none;"></div>
+
+  <!-- Supabase JS -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <script>
+    const SUPABASE_URL = 'https://neqhpxtsnsfutgsmydlb.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5lcWhweHRzbnNmdXRnc215ZGxiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjU5OTY2NDMsImV4cCI6MjA4MTU3MjY0M30.8MGMTYghPZSU6eZRNPnY28iuerobK8HDMS1c1thQFpc';
+
+    const supabase = supabase.createClient(
+      SUPABASE_URL,
+      SUPABASE_ANON_KEY
+    );
+
+    const messageBox = document.getElementById('message');
+    const codeInput = document.getElementById('codeInput');
+    const redeemBtn = document.getElementById('redeemBtn');
+
+    function showMessage(text) {
+      messageBox.textContent = text;
+      messageBox.style.display = 'block';
+    }
+
+    async function ensureAnonymousSession() {
+      const { data } = await supabase.auth.getSession();
+      if (!data.session) {
+        await supabase.auth.signInAnonymously();
+      }
+    }
+
+    redeemBtn.addEventListener('click', async () => {
+      const code = codeInput.value.trim();
+
+      if (!code) {
+        showMessage('Please enter a code.');
+        return;
+      }
+
+      redeemBtn.disabled = true;
+      showMessage('Checking code…');
+
+      try {
+        await ensureAnonymousSession();
+
+        const { data, error } = await supabase.rpc('redeem_code', {
+          p_code_string: code
+        });
+
+        if (error) {
+          console.error(error);
+          showMessage('An error occurred.');
+        } else {
+          showMessage(data.message);
+        }
+      } catch (err) {
+        console.error(err);
+        showMessage('Unexpected error.');
+      }
+
+      redeemBtn.disabled = false;
+    });
+  </script>
+
+</body>
+</html>
