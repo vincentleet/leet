@@ -52,7 +52,7 @@
     const SUPABASE_URL = 'https://neqhpxtsnsfutgsmydlb.supabase.co';
     const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5lcWhweHRzbnNmdXRnc215ZGxiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjU5OTY2NDMsImV4cCI6MjA4MTU3MjY0M30.8MGMTYghPZSU6eZRNPnY28iuerobK8HDMS1c1thQFpc';
 
-    const supabase = supabase.createClient(
+    const supabaseClient = supabase.createClient(
       SUPABASE_URL,
       SUPABASE_ANON_KEY
     );
