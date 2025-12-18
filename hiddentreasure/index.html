@@ -9,7 +9,7 @@
     body {
       font-family: system-ui, sans-serif;
       background: #0e0e0e;
-      color: #fff;
+      color: #ffffff;
       padding: 2rem;
       max-width: 480px;
       margin: auto;
@@ -68,6 +68,11 @@
     .error { color: #ef4444; }
 
     .hidden { display: none; }
+
+    #habboAvatar {
+      image-rendering: pixelated;
+      margin-top: 1rem;
+    }
   </style>
 </head>
 <body>
@@ -96,6 +101,12 @@
     </button>
 
     <div id="verifyStatus" class="message"></div>
+
+    <!-- AVATAR -->
+    <div id="avatarBox" class="hidden" style="text-align:center;">
+      <img id="habboAvatar" alt="Habbo avatar" />
+      <div id="habboNameLabel" style="margin-top:0.5rem;"></div>
+    </div>
   </div>
 
   <!-- CODE REDEMPTION -->
@@ -121,11 +132,12 @@
     </button>
   </div>
 
+  <!-- Supabase -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
   <script>
     const SUPABASE_URL = 'https://neqhpxtsnsfutgsmydlb.supabase.co';
-    const SUPABASE_KEY = 'sb_publishable_iL7ce1l87I02ZKsIsrkVOA_4rWnFoBR';
+    const SUPABASE_KEY = 'YOUR_PUBLISHABLE_KEY_HERE';
 
     const supabaseClient = supabase.createClient(
       SUPABASE_URL,
@@ -138,6 +150,10 @@
     const copyBtn = document.getElementById('copyBtn');
     const phraseBox = document.getElementById('phraseBox');
     const verifyStatus = document.getElementById('verifyStatus');
+
+    const avatarBox = document.getElementById('avatarBox');
+    const habboAvatar = document.getElementById('habboAvatar');
+    const habboNameLabel = document.getElementById('habboNameLabel');
 
     const redeemBox = document.getElementById('redeemBox');
     const codeInput = document.getElementById('codeInput');
@@ -173,6 +189,7 @@
 
       phraseBox.textContent = 'Generating code…';
       verifyStatus.textContent = '';
+      avatarBox.classList.add('hidden');
 
       const res = await callFunction('verify-habbo', {
         habbo_name: habboName
@@ -180,7 +197,8 @@
 
       if (res.phrase) {
         currentPhrase = res.phrase;
-        phraseBox.innerHTML = `Put this in your Habbo motto:<br><strong>${res.phrase}</strong>`;
+        phraseBox.innerHTML =
+          `Put this in your Habbo motto:<br><strong>${res.phrase}</strong>`;
         copyBtn.classList.remove('hidden');
         checkVerifyBtn.classList.remove('hidden');
       } else {
@@ -203,6 +221,22 @@
         verifyStatus.textContent = '✔ Habbo verified!';
         verifyStatus.className = 'message success';
         redeemBox.classList.remove('hidden');
+
+        const { data } = await supabaseClient
+          .from('users')
+          .select('habbo_name, habbo_figure')
+          .single();
+
+        if (data?.habbo_figure) {
+          const avatarUrl =
+            `https://www.habbo.com/habbo-imaging/avatarimage` +
+            `?figure=${data.habbo_figure}` +
+            `&direction=2&head_direction=2&gesture=sml&size=l&action=std`;
+
+          habboAvatar.src = avatarUrl;
+          habboNameLabel.textContent = data.habbo_name;
+          avatarBox.classList.remove('hidden');
+        }
       } else {
         verifyStatus.textContent =
           'Code not found yet. Try again in a moment.';
