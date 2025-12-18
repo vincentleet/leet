@@ -43,8 +43,13 @@
       background: #555;
     }
 
+    button.danger {
+      background: #dc2626;
+    }
+
     button:disabled {
-      opacity: 0.6;
+      opacity: 0.5;
+      cursor: not-allowed;
     }
 
     .box {
@@ -59,13 +64,10 @@
       min-height: 2rem;
     }
 
-    .success {
-      color: #22c55e;
-    }
+    .success { color: #22c55e; }
+    .error { color: #ef4444; }
 
-    .error {
-      color: #ef4444;
-    }
+    .hidden { display: none; }
   </style>
 </head>
 <body>
@@ -73,7 +75,7 @@
   <h1>Hidden Treasure</h1>
 
   <!-- HABBO VERIFICATION -->
-  <div class="box">
+  <div class="box" id="verifyBox">
     <h2>Verify your Habbo</h2>
 
     <input
@@ -83,19 +85,21 @@
       autocomplete="off"
     />
 
-    <button id="startVerifyBtn">Get verification phrase</button>
+    <button id="startVerifyBtn">Get verification code</button>
 
     <div id="phraseBox" class="message"></div>
 
-    <button id="checkVerifyBtn" class="secondary" style="display:none;">
-      I've updated my motto
+    <button id="copyBtn" class="secondary hidden">Copy code</button>
+
+    <button id="checkVerifyBtn" class="secondary hidden">
+      I’ve updated my motto
     </button>
 
     <div id="verifyStatus" class="message"></div>
   </div>
 
   <!-- CODE REDEMPTION -->
-  <div class="box">
+  <div class="box hidden" id="redeemBox">
     <h2>Redeem Code</h2>
 
     <input
@@ -110,7 +114,13 @@
     <div id="redeemMessage" class="message"></div>
   </div>
 
-  <!-- Supabase -->
+  <!-- LOG OUT -->
+  <div class="box">
+    <button id="logoutBtn" class="danger">
+      Log out / switch Habbo
+    </button>
+  </div>
+
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
   <script>
@@ -125,12 +135,18 @@
     const habboNameInput = document.getElementById('habboName');
     const startVerifyBtn = document.getElementById('startVerifyBtn');
     const checkVerifyBtn = document.getElementById('checkVerifyBtn');
+    const copyBtn = document.getElementById('copyBtn');
     const phraseBox = document.getElementById('phraseBox');
     const verifyStatus = document.getElementById('verifyStatus');
 
+    const redeemBox = document.getElementById('redeemBox');
     const codeInput = document.getElementById('codeInput');
     const redeemBtn = document.getElementById('redeemBtn');
     const redeemMessage = document.getElementById('redeemMessage');
+
+    const logoutBtn = document.getElementById('logoutBtn');
+
+    let currentPhrase = '';
 
     async function ensureSession() {
       await supabaseClient.auth.signInAnonymously();
@@ -149,14 +165,13 @@
       }).then(res => res.json());
     }
 
-    // Start verification
     startVerifyBtn.onclick = async () => {
       const habboName = habboNameInput.value.trim();
       if (!habboName) return;
 
       await ensureSession();
 
-      phraseBox.textContent = 'Generating phrase…';
+      phraseBox.textContent = 'Generating code…';
       verifyStatus.textContent = '';
 
       const res = await callFunction('verify-habbo', {
@@ -164,15 +179,21 @@
       });
 
       if (res.phrase) {
-        phraseBox.innerHTML =
-          `Put this in your Habbo motto:<br><strong>${res.phrase}</strong>`;
-        checkVerifyBtn.style.display = 'block';
+        currentPhrase = res.phrase;
+        phraseBox.innerHTML = `Put this in your Habbo motto:<br><strong>${res.phrase}</strong>`;
+        copyBtn.classList.remove('hidden');
+        checkVerifyBtn.classList.remove('hidden');
       } else {
-        phraseBox.textContent = 'Error generating phrase.';
+        phraseBox.textContent = 'Error generating code.';
       }
     };
 
-    // Check motto
+    copyBtn.onclick = async () => {
+      await navigator.clipboard.writeText(currentPhrase);
+      copyBtn.textContent = 'Copied!';
+      setTimeout(() => copyBtn.textContent = 'Copy code', 1500);
+    };
+
     checkVerifyBtn.onclick = async () => {
       verifyStatus.textContent = 'Checking motto…';
 
@@ -181,14 +202,14 @@
       if (res.verified) {
         verifyStatus.textContent = '✔ Habbo verified!';
         verifyStatus.className = 'message success';
+        redeemBox.classList.remove('hidden');
       } else {
         verifyStatus.textContent =
-          'Phrase not found yet. Make sure your motto is updated.';
+          'Code not found yet. Try again in a moment.';
         verifyStatus.className = 'message error';
       }
     };
 
-    // Redeem code
     redeemBtn.onclick = async () => {
       const code = codeInput.value.trim();
       if (!code) return;
@@ -202,11 +223,15 @@
         { p_code_string: code }
       );
 
-      if (error) {
-        redeemMessage.textContent = 'Something went wrong.';
-      } else {
-        redeemMessage.textContent = data.message;
-      }
+      redeemMessage.textContent = error
+        ? 'Something went wrong.'
+        : data.message;
+    };
+
+    logoutBtn.onclick = async () => {
+      await supabaseClient.auth.signOut();
+      localStorage.clear();
+      location.reload();
     };
   </script>
 
