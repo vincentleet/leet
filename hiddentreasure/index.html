@@ -225,30 +225,29 @@
         redeemBox.classList.remove('hidden');
         logoutBox.classList.remove('hidden');
 
-        const {
-          data: user,
-          error
-        } = await supabaseClient
-          .from('users')
-          .select('habbo_name, habbo_figure')
-          .eq('id', (await supabaseClient.auth.getUser()).data.user.id)
-          .single();
+const { data: user, error } = await supabaseClient
+  .schema('public')
+  .from('users')
+  .select('habbo_name, habbo_figure')
+  .eq('id', (await supabaseClient.auth.getUser()).data.user.id)
+  .single();
 
-        if (error) {
-          console.error('User fetch error:', error);
-          return;
-        }
+if (error) {
+  console.error('User fetch error:', error);
+  return;
+}
 
-        if (user?.habbo_figure) {
-          const avatarUrl =
-            `https://www.habbo.com/habbo-imaging/avatarimage` +
-            `?figure=${user.habbo_figure}` +
-            `&direction=2&head_direction=2&gesture=sml&size=l&action=std`;
+if (user?.habbo_figure) {
+  const avatarUrl =
+    `https://www.habbo.com/habbo-imaging/avatarimage` +
+    `?figure=${user.habbo_figure}` +
+    `&direction=2&head_direction=2&gesture=sml&size=l&action=std`;
 
-          habboAvatar.src = avatarUrl;
-          habboNameLabel.textContent = user.habbo_name;
-          avatarBox.classList.remove('hidden');
-        }
+  habboAvatar.src = avatarUrl;
+  habboNameLabel.textContent = user.habbo_name;
+  avatarBox.classList.remove('hidden');
+}
+
       } else {
         verifyStatus.textContent =
           'Code not found yet. Try again in a moment.';
