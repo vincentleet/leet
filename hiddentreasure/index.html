@@ -104,9 +104,13 @@
 
     <!-- AVATAR -->
     <div id="avatarBox" class="hidden" style="text-align:center;">
-      <img id="habboAvatar" alt="Habbo avatar" />
-      <div id="habboNameLabel" style="margin-top:0.5rem;"></div>
-    </div>
+  <img
+    id="habboAvatar"
+    alt="Habbo avatar"
+    style="image-rendering: pixelated;"
+  />
+  <div id="habboNameLabel"></div>
+</div>
   </div>
 
   <!-- CODE REDEMPTION -->
@@ -224,6 +228,7 @@
 
         redeemBox.classList.remove('hidden');
         logoutBox.classList.remove('hidden');
+  		showAvatar();
 
 const { data: user, error } = await supabaseClient
   .schema('public')
@@ -302,6 +307,57 @@ if (user.habbo_figure) {
       localStorage.clear();
       location.reload();
     };
+    
+      async function showAvatar() {
+    const {
+      data: { user: authUser }
+    } = await supabaseClient.auth.getUser();
+
+    if (!authUser) return;
+
+    const { data: profile, error } = await supabaseClient
+      .schema("public")
+      .from("users")
+      .select("habbo_name, habbo_figure, verified")
+      .eq("id", authUser.id)
+      .maybeSingle();
+
+    if (error || !profile) {
+      console.error("Profile fetch failed", error);
+      return;
+    }
+
+    if (!profile.verified || !profile.habbo_figure) {
+      console.warn("Profile not verified or missing figure", profile);
+      return;
+    }
+
+    const avatarUrl =
+      `https://www.habbo.com/habbo-imaging/avatarimage` +
+      `?figure=${profile.habbo_figure}` +
+      `&direction=2&head_direction=2&gesture=sml&size=l&action=std`;
+
+    const img = document.getElementById("habboAvatar");
+    const box = document.getElementById("avatarBox");
+    const nameLabel = document.getElementById("habboNameLabel");
+
+    img.onload = () => {
+      box.classList.remove("hidden");
+    };
+
+    img.onerror = () => {
+      console.error("Avatar image failed to load", avatarUrl);
+    };
+
+    img.src = avatarUrl;
+    nameLabel.textContent = profile.habbo_name;
+  }
+  
+  document.addEventListener("DOMContentLoaded", async () => {
+  await supabaseClient.auth.signInAnonymously();
+  showAvatar();
+});
+
   </script>
 
 </body>
