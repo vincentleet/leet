@@ -125,7 +125,7 @@
     <div id="redeemMessage" class="message"></div>
   </div>
 
-  <!-- LOG OUT (ONLY SHOWN WHEN VERIFIED) -->
+  <!-- LOG OUT -->
   <div class="box hidden" id="logoutBox">
     <button id="logoutBtn" class="danger">
       Log out / switch Habbo
@@ -225,19 +225,28 @@
         redeemBox.classList.remove('hidden');
         logoutBox.classList.remove('hidden');
 
-        const { data } = await supabaseClient
+        const {
+          data: user,
+          error
+        } = await supabaseClient
           .from('users')
           .select('habbo_name, habbo_figure')
+          .eq('id', (await supabaseClient.auth.getUser()).data.user.id)
           .single();
 
-        if (data?.habbo_figure) {
+        if (error) {
+          console.error('User fetch error:', error);
+          return;
+        }
+
+        if (user?.habbo_figure) {
           const avatarUrl =
             `https://www.habbo.com/habbo-imaging/avatarimage` +
-            `?figure=${data.habbo_figure}` +
+            `?figure=${user.habbo_figure}` +
             `&direction=2&head_direction=2&gesture=sml&size=l&action=std`;
 
           habboAvatar.src = avatarUrl;
-          habboNameLabel.textContent = data.habbo_name;
+          habboNameLabel.textContent = user.habbo_name;
           avatarBox.classList.remove('hidden');
         }
       } else {
