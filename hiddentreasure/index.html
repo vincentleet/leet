@@ -2,27 +2,27 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Hidden Treasure – Code Redemption</title>
+  <title>Hidden Treasure</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <style>
     body {
-      font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+      font-family: system-ui, sans-serif;
       background: #0e0e0e;
-      color: #ffffff;
+      color: #fff;
       padding: 2rem;
-      max-width: 420px;
+      max-width: 480px;
       margin: auto;
     }
 
-    h1 {
+    h1, h2 {
       text-align: center;
     }
 
     input, button {
       width: 100%;
       padding: 0.75rem;
-      margin-top: 0.75rem;
+      margin-top: 0.5rem;
       font-size: 1rem;
       border-radius: 6px;
       border: none;
@@ -39,95 +39,175 @@
       cursor: pointer;
     }
 
-    button:disabled {
-      opacity: 0.6;
-      cursor: not-allowed;
+    button.secondary {
+      background: #555;
     }
 
-    .message {
-      margin-top: 1rem;
+    button:disabled {
+      opacity: 0.6;
+    }
+
+    .box {
+      margin-top: 1.5rem;
       padding: 1rem;
       background: #1e1e1e;
       border-radius: 6px;
-      min-height: 3rem;
+    }
+
+    .message {
+      margin-top: 0.75rem;
+      min-height: 2rem;
+    }
+
+    .success {
+      color: #22c55e;
+    }
+
+    .error {
+      color: #ef4444;
     }
   </style>
 </head>
 <body>
 
-  <h1>Enter Code</h1>
+  <h1>Hidden Treasure</h1>
 
-  <input
-    id="codeInput"
-    type="text"
-    placeholder="Enter code"
-    autocomplete="off"
-  />
+  <!-- HABBO VERIFICATION -->
+  <div class="box">
+    <h2>Verify your Habbo</h2>
 
-  <button id="redeemBtn">Redeem</button>
+    <input
+      id="habboName"
+      type="text"
+      placeholder="Habbo username"
+      autocomplete="off"
+    />
 
-  <div id="message" class="message"></div>
+    <button id="startVerifyBtn">Get verification phrase</button>
 
-  <!-- Supabase JS v2 -->
+    <div id="phraseBox" class="message"></div>
+
+    <button id="checkVerifyBtn" class="secondary" style="display:none;">
+      I've updated my motto
+    </button>
+
+    <div id="verifyStatus" class="message"></div>
+  </div>
+
+  <!-- CODE REDEMPTION -->
+  <div class="box">
+    <h2>Redeem Code</h2>
+
+    <input
+      id="codeInput"
+      type="text"
+      placeholder="Enter code"
+      autocomplete="off"
+    />
+
+    <button id="redeemBtn">Redeem</button>
+
+    <div id="redeemMessage" class="message"></div>
+  </div>
+
+  <!-- Supabase -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
   <script>
-    // 🔑 Supabase config
     const SUPABASE_URL = 'https://neqhpxtsnsfutgsmydlb.supabase.co';
-    const SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_iL7ce1l87I02ZKsIsrkVOA_4rWnFoBR';
+    const SUPABASE_KEY = 'sb_publishable_iL7ce1l87I02ZKsIsrkVOA_4rWnFoBR';
 
-    // IMPORTANT: use a different variable name
     const supabaseClient = supabase.createClient(
       SUPABASE_URL,
-      SUPABASE_PUBLISHABLE_KEY
+      SUPABASE_KEY
     );
+
+    const habboNameInput = document.getElementById('habboName');
+    const startVerifyBtn = document.getElementById('startVerifyBtn');
+    const checkVerifyBtn = document.getElementById('checkVerifyBtn');
+    const phraseBox = document.getElementById('phraseBox');
+    const verifyStatus = document.getElementById('verifyStatus');
 
     const codeInput = document.getElementById('codeInput');
     const redeemBtn = document.getElementById('redeemBtn');
-    const messageBox = document.getElementById('message');
+    const redeemMessage = document.getElementById('redeemMessage');
 
-    function showMessage(text) {
-      messageBox.textContent = text;
-    }
-
-    async function ensureAnonymousSession() {
-      // Safe to call every time
+    async function ensureSession() {
       await supabaseClient.auth.signInAnonymously();
     }
 
-    redeemBtn.addEventListener('click', async () => {
+    async function callFunction(name, body) {
+      const session = (await supabaseClient.auth.getSession()).data.session;
+
+      return fetch(`${SUPABASE_URL}/functions/v1/${name}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`
+        },
+        body: JSON.stringify(body)
+      }).then(res => res.json());
+    }
+
+    // Start verification
+    startVerifyBtn.onclick = async () => {
+      const habboName = habboNameInput.value.trim();
+      if (!habboName) return;
+
+      await ensureSession();
+
+      phraseBox.textContent = 'Generating phrase…';
+      verifyStatus.textContent = '';
+
+      const res = await callFunction('verify-habbo', {
+        habbo_name: habboName
+      });
+
+      if (res.phrase) {
+        phraseBox.innerHTML =
+          `Put this in your Habbo motto:<br><strong>${res.phrase}</strong>`;
+        checkVerifyBtn.style.display = 'block';
+      } else {
+        phraseBox.textContent = 'Error generating phrase.';
+      }
+    };
+
+    // Check motto
+    checkVerifyBtn.onclick = async () => {
+      verifyStatus.textContent = 'Checking motto…';
+
+      const res = await callFunction('check-habbo-motto', {});
+
+      if (res.verified) {
+        verifyStatus.textContent = '✔ Habbo verified!';
+        verifyStatus.className = 'message success';
+      } else {
+        verifyStatus.textContent =
+          'Phrase not found yet. Make sure your motto is updated.';
+        verifyStatus.className = 'message error';
+      }
+    };
+
+    // Redeem code
+    redeemBtn.onclick = async () => {
       const code = codeInput.value.trim();
+      if (!code) return;
 
-      if (!code) {
-        showMessage('Please enter a code.');
-        return;
+      await ensureSession();
+
+      redeemMessage.textContent = 'Checking code…';
+
+      const { data, error } = await supabaseClient.rpc(
+        'redeem_code',
+        { p_code_string: code }
+      );
+
+      if (error) {
+        redeemMessage.textContent = 'Something went wrong.';
+      } else {
+        redeemMessage.textContent = data.message;
       }
-
-      redeemBtn.disabled = true;
-      showMessage('Checking code…');
-
-      try {
-        await ensureAnonymousSession();
-
-        const { data, error } = await supabaseClient.rpc(
-          'redeem_code',
-          { p_code_string: code }
-        );
-
-        if (error) {
-          console.error(error);
-          showMessage('Something went wrong.');
-        } else {
-          showMessage(data.message);
-        }
-
-      } catch (err) {
-        console.error(err);
-        showMessage('Unexpected error.');
-      }
-
-      redeemBtn.disabled = false;
-    });
+    };
   </script>
 
 </body>
