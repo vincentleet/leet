@@ -2,31 +2,54 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Habbo Companion – Code Redemption</title>
+  <title>Hidden Treasure – Code Redemption</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
+
   <style>
     body {
-      font-family: system-ui, sans-serif;
-      background: #111;
-      color: #fff;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+      background: #0e0e0e;
+      color: #ffffff;
       padding: 2rem;
-      max-width: 480px;
+      max-width: 420px;
       margin: auto;
     }
+
+    h1 {
+      text-align: center;
+    }
+
     input, button {
       width: 100%;
       padding: 0.75rem;
-      margin-top: 0.5rem;
+      margin-top: 0.75rem;
       font-size: 1rem;
+      border-radius: 6px;
+      border: none;
     }
+
+    input {
+      background: #1e1e1e;
+      color: #fff;
+    }
+
     button {
+      background: #3b82f6;
+      color: white;
       cursor: pointer;
     }
+
+    button:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
     .message {
       margin-top: 1rem;
       padding: 1rem;
-      background: #222;
+      background: #1e1e1e;
       border-radius: 6px;
+      min-height: 3rem;
     }
   </style>
 </head>
@@ -43,34 +66,33 @@
 
   <button id="redeemBtn">Redeem</button>
 
-  <div id="message" class="message" style="display:none;"></div>
+  <div id="message" class="message"></div>
 
-  <!-- Supabase JS -->
+  <!-- Supabase JS v2 -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
   <script>
+    // 🔑 Supabase config
     const SUPABASE_URL = 'https://neqhpxtsnsfutgsmydlb.supabase.co';
-    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5lcWhweHRzbnNmdXRnc215ZGxiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjU5OTY2NDMsImV4cCI6MjA4MTU3MjY0M30.8MGMTYghPZSU6eZRNPnY28iuerobK8HDMS1c1thQFpc';
+    const SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_iL7ce1l87I02ZKsIsrkVOA_4rWnFoBR';
 
+    // IMPORTANT: use a different variable name
     const supabaseClient = supabase.createClient(
       SUPABASE_URL,
-      SUPABASE_ANON_KEY
+      SUPABASE_PUBLISHABLE_KEY
     );
 
-    const messageBox = document.getElementById('message');
     const codeInput = document.getElementById('codeInput');
     const redeemBtn = document.getElementById('redeemBtn');
+    const messageBox = document.getElementById('message');
 
     function showMessage(text) {
       messageBox.textContent = text;
-      messageBox.style.display = 'block';
     }
 
     async function ensureAnonymousSession() {
-      const { data } = await supabaseClient.auth.getSession();
-      if (!data.session) {
-        await supabase.auth.signInAnonymously();
-      }
+      // Safe to call every time
+      await supabaseClient.auth.signInAnonymously();
     }
 
     redeemBtn.addEventListener('click', async () => {
@@ -87,16 +109,18 @@
       try {
         await ensureAnonymousSession();
 
-        const { data, error } = await supabase.rpc('redeem_code', {
-          p_code_string: code
-        });
+        const { data, error } = await supabaseClient.rpc(
+          'redeem_code',
+          { p_code_string: code }
+        );
 
         if (error) {
           console.error(error);
-          showMessage('An error occurred.');
+          showMessage('Something went wrong.');
         } else {
           showMessage(data.message);
         }
+
       } catch (err) {
         console.error(err);
         showMessage('Unexpected error.');
