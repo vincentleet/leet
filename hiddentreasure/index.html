@@ -354,9 +354,15 @@ if (user.habbo_figure) {
   }
   
   document.addEventListener("DOMContentLoaded", async () => {
-  await supabaseClient.auth.signInAnonymously();
+  const { data } = await supabaseClient.auth.getSession();
+
+  if (!data.session) {
+    await supabaseClient.auth.signInAnonymously();
+  }
+
   showAvatar();
 });
+
 
   </script>
 
