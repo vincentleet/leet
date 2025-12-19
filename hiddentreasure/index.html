@@ -9,63 +9,41 @@
     body {
       font-family: system-ui, sans-serif;
       background: #0e0e0e;
-      color: #ffffff;
+      color: #fff;
       padding: 2rem;
       max-width: 480px;
       margin: auto;
     }
 
-    h1, h2 {
-      text-align: center;
+    .box {
+      background: #1e1e1e;
+      padding: 1rem;
+      border-radius: 8px;
+      margin-bottom: 1.5rem;
     }
 
     input, button {
       width: 100%;
       padding: 0.75rem;
       margin-top: 0.5rem;
-      font-size: 1rem;
       border-radius: 6px;
       border: none;
+      font-size: 1rem;
     }
 
     input {
-      background: #1e1e1e;
+      background: #111;
       color: #fff;
     }
 
     button {
       background: #3b82f6;
-      color: white;
+      color: #fff;
       cursor: pointer;
     }
 
-    button.secondary {
-      background: #555;
-    }
-
-    button.danger {
-      background: #dc2626;
-    }
-
-    button:disabled {
-      opacity: 0.5;
-      cursor: not-allowed;
-    }
-
-    .box {
-      margin-top: 1.5rem;
-      padding: 1rem;
-      background: #1e1e1e;
-      border-radius: 6px;
-    }
-
-    .message {
-      margin-top: 0.75rem;
-      min-height: 2rem;
-    }
-
-    .success { color: #22c55e; }
-    .error { color: #ef4444; }
+    button.secondary { background: #555; }
+    button.danger { background: #dc2626; }
 
     .hidden { display: none; }
 
@@ -79,291 +57,143 @@
 
   <h1>Hidden Treasure</h1>
 
-  <!-- HABBO VERIFICATION -->
-  <div class="box" id="verifyBox">
-    <h2>Verify your Habbo</h2>
-
-    <input
-      id="habboName"
-      type="text"
-      placeholder="Habbo username"
-      autocomplete="off"
-    />
-
+  <!-- VERIFY -->
+  <div class="box">
+    <input id="habboName" placeholder="Habbo name" />
     <button id="startVerifyBtn">Get verification code</button>
-
-    <div id="phraseBox" class="message"></div>
-
+    <div id="phraseBox"></div>
     <button id="copyBtn" class="secondary hidden">Copy code</button>
-
-    <button id="checkVerifyBtn" class="secondary hidden">
-      I’ve updated my motto
-    </button>
-
-    <div id="verifyStatus" class="message"></div>
-
-    <!-- AVATAR -->
-    <div id="avatarBox" class="hidden" style="text-align:center;">
-  <img
-    id="habboAvatar"
-    alt="Habbo avatar"
-    style="image-rendering: pixelated;"
-  />
-  <div id="habboNameLabel"></div>
-</div>
+    <button id="checkVerifyBtn" class="secondary hidden">I've updated my motto</button>
+    <div id="verifyStatus"></div>
   </div>
 
-  <!-- CODE REDEMPTION -->
+  <!-- AVATAR -->
+  <div class="box hidden" id="avatarBox" style="text-align:center;">
+    <img id="habboAvatar" />
+    <div id="habboNameLabel"></div>
+  </div>
+
+  <!-- REDEEM -->
   <div class="box hidden" id="redeemBox">
-    <h2>Redeem Code</h2>
-
-    <input
-      id="codeInput"
-      type="text"
-      placeholder="Enter code"
-      autocomplete="off"
-    />
-
+    <input id="codeInput" placeholder="Enter code" />
     <button id="redeemBtn">Redeem</button>
-
-    <div id="redeemMessage" class="message"></div>
+    <div id="redeemMessage"></div>
   </div>
 
-  <!-- LOG OUT -->
+  <!-- LOGOUT -->
   <div class="box hidden" id="logoutBox">
-    <button id="logoutBtn" class="danger">
-      Log out / switch Habbo
-    </button>
+    <button id="logoutBtn" class="danger">Log out / switch Habbo</button>
   </div>
 
-  <!-- Supabase -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
   <script>
-    const SUPABASE_URL = 'https://neqhpxtsnsfutgsmydlb.supabase.co';
-    const SUPABASE_KEY = 'sb_publishable_iL7ce1l87I02ZKsIsrkVOA_4rWnFoBR';
+    const SUPABASE_URL = "https://neqhpxtsnsfutgsmydlb.supabase.co";
+    const SUPABASE_KEY = "sb_publishable_iL7ce1l87I02ZKsIsrkVOA_4rWnFoBR";
 
-    const supabaseClient = supabase.createClient(
-      SUPABASE_URL,
-      SUPABASE_KEY
-    );
+    const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-    const habboNameInput = document.getElementById('habboName');
-    const startVerifyBtn = document.getElementById('startVerifyBtn');
-    const checkVerifyBtn = document.getElementById('checkVerifyBtn');
-    const copyBtn = document.getElementById('copyBtn');
-    const phraseBox = document.getElementById('phraseBox');
-    const verifyStatus = document.getElementById('verifyStatus');
+    const habboName = document.getElementById("habboName");
+    const startVerifyBtn = document.getElementById("startVerifyBtn");
+    const checkVerifyBtn = document.getElementById("checkVerifyBtn");
+    const copyBtn = document.getElementById("copyBtn");
+    const phraseBox = document.getElementById("phraseBox");
+    const verifyStatus = document.getElementById("verifyStatus");
 
-    const avatarBox = document.getElementById('avatarBox');
-    const habboAvatar = document.getElementById('habboAvatar');
-    const habboNameLabel = document.getElementById('habboNameLabel');
+    const avatarBox = document.getElementById("avatarBox");
+    const habboAvatar = document.getElementById("habboAvatar");
+    const habboNameLabel = document.getElementById("habboNameLabel");
 
-    const redeemBox = document.getElementById('redeemBox');
-    const codeInput = document.getElementById('codeInput');
-    const redeemBtn = document.getElementById('redeemBtn');
-    const redeemMessage = document.getElementById('redeemMessage');
+    const redeemBox = document.getElementById("redeemBox");
+    const redeemBtn = document.getElementById("redeemBtn");
+    const redeemMessage = document.getElementById("redeemMessage");
+    const codeInput = document.getElementById("codeInput");
 
-    const logoutBox = document.getElementById('logoutBox');
-    const logoutBtn = document.getElementById('logoutBtn');
-
-    let currentPhrase = '';
+    const logoutBox = document.getElementById("logoutBox");
+    const logoutBtn = document.getElementById("logoutBtn");
 
     async function ensureSession() {
-      await supabaseClient.auth.signInAnonymously();
+      const { data } = await supabaseClient.auth.getSession();
+      if (!data.session) {
+        await supabaseClient.auth.signInAnonymously();
+      }
     }
 
-    async function callFunction(name, body) {
-      const session = (await supabaseClient.auth.getSession()).data.session;
+    async function showAvatar() {
+      const { data: { user } } = await supabaseClient.auth.getUser();
+      if (!user) return;
 
+      const { data: profile } = await supabaseClient
+        .schema("public")
+        .from("users")
+        .select("habbo_name, habbo_figure, verified")
+        .eq("user_id", user.id)
+        .maybeSingle();
+
+      if (!profile || !profile.verified || !profile.habbo_figure) return;
+
+      habboAvatar.src =
+        `https://www.habbo.com/habbo-imaging/avatarimage?figure=${profile.habbo_figure}&direction=2&head_direction=2&gesture=sml&size=l&action=std`;
+
+      habboNameLabel.textContent = profile.habbo_name;
+      avatarBox.classList.remove("hidden");
+      redeemBox.classList.remove("hidden");
+      logoutBox.classList.remove("hidden");
+    }
+
+    async function callFunction(name, body = {}) {
+      const session = (await supabaseClient.auth.getSession()).data.session;
       return fetch(`${SUPABASE_URL}/functions/v1/${name}`, {
-        method: 'POST',
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${session.access_token}`
+          "Authorization": `Bearer ${session.access_token}`,
+          "Content-Type": "application/json"
         },
         body: JSON.stringify(body)
-      }).then(res => res.json());
+      }).then(r => r.json());
     }
 
     startVerifyBtn.onclick = async () => {
-      const habboName = habboNameInput.value.trim();
-      if (!habboName) return;
-
       await ensureSession();
-
-      phraseBox.textContent = 'Generating code…';
-      verifyStatus.textContent = '';
-      avatarBox.classList.add('hidden');
-
-      const res = await callFunction('verify-habbo', {
-        habbo_name: habboName
+      const res = await callFunction("verify-habbo", {
+        habbo_name: habboName.value.trim()
       });
 
-      if (res.phrase) {
-        currentPhrase = res.phrase;
-        phraseBox.innerHTML =
-          `Put this in your Habbo motto:<br><strong>${res.phrase}</strong>`;
-        copyBtn.classList.remove('hidden');
-        checkVerifyBtn.classList.remove('hidden');
-      } else {
-        phraseBox.textContent = 'Error generating code.';
-      }
+      phraseBox.innerHTML = `<strong>${res.phrase}</strong>`;
+      copyBtn.classList.remove("hidden");
+      checkVerifyBtn.classList.remove("hidden");
     };
 
-    copyBtn.onclick = async () => {
-      await navigator.clipboard.writeText(currentPhrase);
-      copyBtn.textContent = 'Copied!';
-      setTimeout(() => copyBtn.textContent = 'Copy code', 1500);
+    copyBtn.onclick = () => {
+      navigator.clipboard.writeText(phraseBox.innerText);
     };
 
     checkVerifyBtn.onclick = async () => {
-      verifyStatus.textContent = 'Checking motto…';
-
-      const res = await callFunction('check-habbo-motto', {});
-
+      verifyStatus.textContent = "Checking...";
+      const res = await callFunction("check-habbo-motto");
       if (res.verified) {
-        verifyStatus.textContent = '✔ Habbo verified!';
-        verifyStatus.className = 'message success';
-
-        redeemBox.classList.remove('hidden');
-        logoutBox.classList.remove('hidden');
-  		showAvatar();
-
-const { data: user, error } = await supabaseClient
-  .schema('public')
-  .from('users')
-  .select('habbo_name, habbo_figure')
-  .eq('id', (await supabaseClient.auth.getUser()).data.user.id)
-  .maybeSingle();
-
-if (error) {
-  console.error('User fetch error:', error);
-  return;
-}
-
-if (user?.habbo_figure) {
-  const avatarUrl =
-    `https://www.habbo.com/habbo-imaging/avatarimage` +
-    `?figure=${user.habbo_figure}` +
-    `&direction=2&head_direction=2&gesture=sml&size=l&action=std`;
-
-  habboAvatar.src = avatarUrl;
-  habboNameLabel.textContent = user.habbo_name;
-  avatarBox.classList.remove('hidden');
-}
-
+        verifyStatus.textContent = "Verified!";
+        showAvatar();
       } else {
-        verifyStatus.textContent =
-          'Code not found yet. Try again in a moment.';
-        verifyStatus.className = 'message error';
+        verifyStatus.textContent = "Code not found yet.";
       }
     };
 
     redeemBtn.onclick = async () => {
-      const code = codeInput.value.trim();
-      if (!code) return;
-
-      await ensureSession();
-
-      redeemMessage.textContent = 'Checking code…';
-
-      const { data: user, error } = await supabaseClient
-  .schema('public')
-  .from('users')
-  .select('habbo_name, habbo_figure')
-  .eq('id', (await supabaseClient.auth.getUser()).data.user.id)
-  .maybeSingle();
-
-if (error) {
-  console.error('User fetch error:', error);
-  return;
-}
-
-if (!user) {
-  console.log('User row not created yet, retrying...');
-  setTimeout(checkVerifyBtn.onclick, 500);
-  return;
-}
-
-if (user.habbo_figure) {
-  const avatarUrl =
-    `https://www.habbo.com/habbo-imaging/avatarimage` +
-    `?figure=${user.habbo_figure}` +
-    `&direction=2&head_direction=2&gesture=sml&size=l&action=std`;
-
-  habboAvatar.src = avatarUrl;
-  habboNameLabel.textContent = user.habbo_name;
-  avatarBox.classList.remove('hidden');
-}
-
-      redeemMessage.textContent = error
-        ? 'Something went wrong.'
-        : data.message;
+      const { data } = await supabaseClient.rpc("redeem_code", {
+        p_code_string: codeInput.value.trim()
+      });
+      redeemMessage.textContent = data?.message;
     };
 
     logoutBtn.onclick = async () => {
       await supabaseClient.auth.signOut();
-      localStorage.clear();
       location.reload();
     };
-    
-      async function showAvatar() {
-    const {
-      data: { user: authUser }
-    } = await supabaseClient.auth.getUser();
 
-    if (!authUser) return;
-
-    const { data: profile, error } = await supabaseClient
-      .schema("public")
-      .from("users")
-      .select("habbo_name, habbo_figure, verified")
-      .eq("id", authUser.id)
-      .maybeSingle();
-
-    if (error || !profile) {
-      console.error("Profile fetch failed", error);
-      return;
-    }
-
-    if (!profile.verified || !profile.habbo_figure) {
-      console.warn("Profile not verified or missing figure", profile);
-      return;
-    }
-
-    const avatarUrl =
-      `https://www.habbo.com/habbo-imaging/avatarimage` +
-      `?figure=${profile.habbo_figure}` +
-      `&direction=2&head_direction=2&gesture=sml&size=l&action=std`;
-
-    const img = document.getElementById("habboAvatar");
-    const box = document.getElementById("avatarBox");
-    const nameLabel = document.getElementById("habboNameLabel");
-
-    img.onload = () => {
-      box.classList.remove("hidden");
-    };
-
-    img.onerror = () => {
-      console.error("Avatar image failed to load", avatarUrl);
-    };
-
-    img.src = avatarUrl;
-    nameLabel.textContent = profile.habbo_name;
-  }
-  
-  document.addEventListener("DOMContentLoaded", async () => {
-  const { data } = await supabaseClient.auth.getSession();
-
-  if (!data.session) {
-    await supabaseClient.auth.signInAnonymously();
-  }
-
-  showAvatar();
-});
-
-
+    document.addEventListener("DOMContentLoaded", async () => {
+      await ensureSession();
+      showAvatar();
+    });
   </script>
 
 </body>
