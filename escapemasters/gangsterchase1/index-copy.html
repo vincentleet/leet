@@ -479,6 +479,7 @@
       opacity: 1;
     }
   </style>
+
 </head>
 
 <body>
@@ -687,93 +688,68 @@
 <div class="toast" id="toast">Call ended</div>
 
 <!-- CALL AUDIO (your MP3s) -->
-<<<<<<< HEAD
 <audio id="callAudio" preload="auto"></audio>
-=======
 <audio id="ringAudio"  src="phone_call_full.mp3"  preload="auto"></audio>
 <audio id="callAudio"  src="police_call.mp3" preload="auto"></audio>
 <audio id="endAudio"   src="phone_end.mp3"   preload="auto"></audio>
->>>>>>> Working-audio
 
-<!-- Firebase Realtime Database (event logging) -->
+<!-- =====================================================
+     🔥 FIREBASE + SUPER SIMPLE ERMA LOGGING
+     ===================================================== -->
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js";
   import { getDatabase, ref, push, set } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-database.js";
 
-  // =========================
-  // ERMA LOGGING CONFIG (EDIT PER ROOM/PUZZLE)
-  // =========================
-  // NOTE: Browsers cannot reliably read the user's internal/LAN IP (e.g., 192.168.x.x).
-  // If you need it, inject it via server/template or query string, otherwise keep "unknown".
-  window.ERMA_CONTEXT = {
-    ermaBranch: "rotorua.escapemasters.co.nz",
-    ermaRoomId: "QAE0LsitCjkwvPFwQl",
-    ermaRoomName: "Gangster Chase 1",
-    ermaPuzzleId: "pid-gc1-brphone",
-    ermaPuzzleName: "Backroom Phone",
-    internalIpAddress: "unknown"
+  const ERMA_BASE_FIELDS = {
+    "ERMA Branch": "rotorua.escapemasters.co.nz",
+    "ERMA Room ID": "QAE0LsitCjkwvPFwQl",
+    "ERMA Room Name": "Gangster Chase 1",
+    "ERMA Puzzle ID": "puzzleid-gc1-brphone",
+    "ERMA Puzzle Name": "Backroom phone"
   };
 
-  // Mutable state that can change over time (auto-stamped on every log)
-  window.ERMA_STATE = {
-    ermaPuzzleConnectionStatus: "Ready",
-    ermaPuzzleConnectionStatusDate: "",
+  const LOG_EVENTS = {
+    PAGE_LOADED: {
+      event: "page_loaded",
+      fields: {
+        "ERMA Puzzle Connection Status": "Ready",
+        "ERMA Puzzle Status": "Conversation ready",
+        "ERMA Puzzle Trigger": "Conversation loaded"
+      }
+    },
 
-    ermaPuzzleStatus: "",
-    ermaPuzzleStatusDate: "",
+    REPLY_TAPPED: {
+      event: "reply_tapped",
+      fields: {
+        "ERMA Puzzle Connection Status": "In Progress",
+        "ERMA Puzzle Trigger": "Player taps Reply"
+      }
+    },
 
-    // Trigger fields are included on every log (blank unless an event sets them)
-    ermaPuzzleTrigger: "",
-    ermaPuzzleTriggerDate: "",
-    ermaPuzzleTriggerResponse: "",
-    ermaPuzzleTriggerResponseDate: ""
+    OPTION_SELECTED: {
+      event: "option_selected",
+      fields: (choice) => ({
+        "ERMA Puzzle Trigger": "Player selected option",
+        "ERMA Puzzle Trigger Response": choice
+      })
+    },
+
+    EXIT_CODE_GIVEN: {
+      event: "exit_code_given",
+      fields: {
+        "ERMA Puzzle Trigger": "Exit code revealed",
+        "ERMA Exit Code": "5291"
+      }
+    },
+
+    CONVERSATION_ENDED: {
+      event: "conversation_ended",
+      fields: {
+        "ERMA Puzzle Status": "Conversation ended"
+      }
+    }
   };
 
-  function pad2(n) { return String(n).padStart(2, "0"); }
-
-  // Format: DD/MM/YYYY HH:mm (local time)
-  function formatErmaDate(d = new Date()) {
-    const day = pad2(d.getDate());
-    const month = pad2(d.getMonth() + 1);
-    const year = d.getFullYear();
-    const hour = pad2(d.getHours());
-    const min = pad2(d.getMinutes());
-    return `${day}/${month}/${year} ${hour}:${min}`;
-  }
-
-  // State helpers (developer-proof: always updates status + date together)
-  window.ermaSetPuzzleConnectionStatus = (status) => {
-    window.ERMA_STATE.ermaPuzzleConnectionStatus = status;
-    window.ERMA_STATE.ermaPuzzleConnectionStatusDate = formatErmaDate(new Date());
-  };
-
-  window.ermaSetPuzzleStatus = (statusText) => {
-    window.ERMA_STATE.ermaPuzzleStatus = statusText;
-    window.ERMA_STATE.ermaPuzzleStatusDate = formatErmaDate(new Date());
-  };
-
-  // Trigger helper (writes trigger fields into state, logs once, then clears trigger fields)
-  window.ermaLogTrigger = async (trigger, response = "OK") => {
-    const now = new Date();
-    const when = formatErmaDate(now);
-
-    window.ERMA_STATE.ermaPuzzleTrigger = trigger;
-    window.ERMA_STATE.ermaPuzzleTriggerDate = when;
-    window.ERMA_STATE.ermaPuzzleTriggerResponse = response;
-    window.ERMA_STATE.ermaPuzzleTriggerResponseDate = when;
-
-    await window.logEventRTDB("erma_puzzle_trigger", {});
-
-    // Clear trigger fields so they don't leak into unrelated future logs
-    window.ERMA_STATE.ermaPuzzleTrigger = "";
-    window.ERMA_STATE.ermaPuzzleTriggerDate = "";
-    window.ERMA_STATE.ermaPuzzleTriggerResponse = "";
-    window.ERMA_STATE.ermaPuzzleTriggerResponseDate = "";
-  };
-
-  // =========================
-  // FIREBASE INIT
-  // =========================
   const firebaseConfig = {
     apiKey: "AIzaSyBdLzbDjfF0l5iTckIXVV_sziLKEqIyN3s",
     authDomain: "gangster-chase-3fee5.firebaseapp.com",
@@ -787,59 +763,101 @@
   const app = initializeApp(firebaseConfig);
   const db = getDatabase(app);
 
-  // Per-visit session id (persists for the tab/session)
-  const SESSION_KEY = "gc_session_id";
-  const sessionId = sessionStorage.getItem(SESSION_KEY) || crypto.randomUUID();
-  sessionStorage.setItem(SESSION_KEY, sessionId);
+  const sessionId =
+    sessionStorage.getItem("erma_session") || crypto.randomUUID();
+  sessionStorage.setItem("erma_session", sessionId);
 
-  // Developer-proof logger: ALWAYS stamps ERMA fields
-  window.logEventRTDB = async (event, data = {}) => {
-  // If offline, skip logging entirely
-  if (!navigator.onLine) return;
+  function ermaTimestamp() {
+    const d = new Date();
+    return d.toLocaleString("en-GB", {
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: false
+    });
+  }
+
+  window.ermaLog = async (logKey, param) => {
+    if (!navigator.onLine) return;
+
+    const def = LOG_EVENTS[logKey];
+    if (!def) return;
+
+    const fields =
+      typeof def.fields === "function" ? def.fields(param) : def.fields;
+
+    const payload = {
+      event: def.event,
+      timestamp: Date.now(),
+      sessionId
+    };
+
+    Object.entries(ERMA_BASE_FIELDS).forEach(([k, v]) => {
+      payload[k] = v;
+    });
+
+    Object.entries(fields).forEach(([k, v]) => {
+      payload[k] = v;
+      payload[`${k} Date`] = ermaTimestamp();
+    });
+
     try {
-      const entryRef = push(ref(db, "interactionLogs"));
-      await set(entryRef, {
-        event,
-        timestamp: Date.now(),
-        sessionId,
-
-        // Required ERMA fields
-        ermaBranch: window.ERMA_CONTEXT.ermaBranch,
-        ermaRoomId: window.ERMA_CONTEXT.ermaRoomId,
-        ermaRoomName: window.ERMA_CONTEXT.ermaRoomName,
-        ermaPuzzleId: window.ERMA_CONTEXT.ermaPuzzleId,
-        ermaPuzzleName: window.ERMA_CONTEXT.ermaPuzzleName,
-        internalIpAddress: window.ERMA_CONTEXT.internalIpAddress,
-
-        ermaPuzzleConnectionStatus: window.ERMA_STATE.ermaPuzzleConnectionStatus,
-        ermaPuzzleConnectionStatusDate: window.ERMA_STATE.ermaPuzzleConnectionStatusDate,
-
-        ermaPuzzleStatus: window.ERMA_STATE.ermaPuzzleStatus,
-        ermaPuzzleStatusDate: window.ERMA_STATE.ermaPuzzleStatusDate,
-
-        ermaPuzzleTrigger: window.ERMA_STATE.ermaPuzzleTrigger,
-        ermaPuzzleTriggerDate: window.ERMA_STATE.ermaPuzzleTriggerDate,
-        ermaPuzzleTriggerResponse: window.ERMA_STATE.ermaPuzzleTriggerResponse,
-        ermaPuzzleTriggerResponseDate: window.ERMA_STATE.ermaPuzzleTriggerResponseDate,
-
-        // Optional extra context
-        ermaBranchId: window.ERMA_CONTEXT.ermaBranchId,
-
-        // Any event-specific extras (choice, href, etc.)
-        ...data
-      });
-    } catch (err) {
-      // fail silently when Firebase errors
-    }
+      await set(push(ref(db, "interactionLogs")), payload);
+    } catch {}
   };
 
-  // Set initial "Ready" timestamp and log page load
-  window.ermaSetPuzzleConnectionStatus("Ready");
+  // Log page load automatically
+  ermaLog("PAGE_LOADED");
+</script>
 
-  window.logEventRTDB("page_loaded", {
-    userAgent: navigator.userAgent,
-    href: location.href
+<script>
+  // Reply button
+  replyBtn.addEventListener("click", () => {
+    ermaLog("REPLY_TAPPED");
+    openModal();
   });
+
+  // Confirm choice
+  confirmBtn.addEventListener("click", () => {
+    const choice = document.querySelector("input[name='decision']:checked");
+    if (!choice) return alert("Please select an option.");
+
+    ermaLog("OPTION_SELECTED", choice.value);
+    closeModal();
+
+    if (choice.value === "escape") playEscapeSequence(0);
+    if (choice.value === "police") showPoliceCallScreen();
+  });
+
+  // Escape sequence (exit code)
+  function playEscapeSequence(index = 0) {
+    if (index >= escapeScript.length) {
+      ermaLog("CONVERSATION_ENDED");
+      return;
+    }
+
+    const msg = escapeScript[index];
+    appendMessage(msg.text, msg.sender);
+
+    if (msg.text.includes("5291")) {
+      ermaLog("EXIT_CODE_GIVEN");
+    }
+
+    setTimeout(() => playEscapeSequence(index + 1), 800);
+  }
+
+  // Police sequence end
+  function playPoliceSequence(index = 0) {
+    if (index >= policeScript.length) {
+      ermaLog("CONVERSATION_ENDED");
+      return;
+    }
+
+    appendMessage(policeScript[index], "them");
+    setTimeout(() => playPoliceSequence(index + 1), 800);
+  }
 </script>
 
 <script>
@@ -1296,5 +1314,6 @@
   // Initialise Johnny timestamps
   initStaticTimestamps();
 </script>
+
 </body>
 </html>
