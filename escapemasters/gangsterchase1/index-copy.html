@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>WhatsApp v0.1</title>
+  <title>WhatsApp v0.1.1</title>
 
   <style>
     :root {
@@ -1119,11 +1119,6 @@
     divider.className = "date-divider";
     divider.textContent = "Today";
     chatBody.appendChild(divider);
-
-    // Add ~500ms pause before first police message animates in
-    setTimeout(() => {
-      playPoliceSequence(0);
-    }, 500);
   }
 
   function playPoliceSequence(index = 0) {
