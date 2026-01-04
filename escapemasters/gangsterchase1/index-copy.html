@@ -848,16 +848,6 @@
     setTimeout(() => playEscapeSequence(index + 1), 800);
   }
 
-  // Police sequence end
-  function playPoliceSequence(index = 0) {
-    if (index >= policeScript.length) {
-      ermaLog("CONVERSATION_ENDED");
-      return;
-    }
-
-    appendMessage(policeScript[index], "them");
-    setTimeout(() => playPoliceSequence(index + 1), 800);
-  }
 </script>
 
 <script>
