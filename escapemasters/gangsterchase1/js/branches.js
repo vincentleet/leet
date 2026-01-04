@@ -42,7 +42,7 @@ function startPoliceChat() {
   dom.chatName.textContent = "Rotorua Police";
   dom.chatStatus.textContent = "online";
 
-  dom.chatBody.innerHTML = `<div class="date-divider">Today</div>`;
+  // dom.chatBody.innerHTML = `<div class="date-divider">Today</div>`;
 
   [
     "Thank you for reporting the robbery.",
