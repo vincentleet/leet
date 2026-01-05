@@ -688,10 +688,9 @@
 <div class="toast" id="toast">Call ended</div>
 
 <!-- CALL AUDIO (your MP3s) -->
-<audio id="callAudio" preload="auto"></audio>
-<audio id="ringAudio"  src="phone_call_full.mp3"  preload="auto"></audio>
-<audio id="callAudio"  src="police_call.mp3" preload="auto"></audio>
-<audio id="endAudio"   src="phone_end.mp3"   preload="auto"></audio>
+<audio id="ringAudio" src="phone_call_full.mp3" preload="auto"></audio>
+<audio id="callAudio" src="police_call.mp3" preload="auto"></audio>
+<audio id="endAudio" src="phone_end.mp3" preload="auto"></audio>
 
 <!-- =====================================================
      🔥 FIREBASE + SUPER SIMPLE ERMA LOGGING
@@ -863,7 +862,9 @@
   const callStatusEl = document.getElementById("callStatus");
   const callLabelEl = document.getElementById("callLabel");
   
+  const ringAudio = document.getElementById("ringAudio");
   const callAudio = document.getElementById("callAudio");
+  const endAudio = document.getElementById("endAudio");
   let audioUnlocked = false;
 
   function unlockAudio() {
@@ -1168,15 +1169,14 @@
     }
     stopAudioSafe(ringAudio);
     stopAudioSafe(callAudio);
-    stopAudioSafe(callAudio);
+    stopAudioSafe(endAudio);
 
     // Start phone ring for 5 seconds
     if (ringAudio) {
       try {
-        callAudio.src = "phone_ring.mp3";
-        callAudio.currentTime = 0;
-        callAudio.volume = 1;
-        callAudio.play();
+        ringAudio.currentTime = 0;
+        ringAudio.volume = 1;
+        ringAudio.play();
         audioUnlocked = true;
       } catch (e) {
         // ignore autoplay issues
@@ -1187,6 +1187,7 @@
     setTimeout(() => {
       if (callLabelEl) callLabelEl.textContent = "Connected";
       if (callStatusEl) callStatusEl.textContent = "00:00";
+      stopAudioSafe(ringAudio);
       playCall();
 
       let seconds = 0;
@@ -1201,9 +1202,8 @@
       setTimeout(() => {
         if (callAudio) {
           try {
-            callAudio.src = "police_call.mp3";
-          callAudio.currentTime = 0;
-          if (audioUnlocked) callAudio.play();
+            callAudio.currentTime = 0;
+            if (audioUnlocked) callAudio.play();
             // let it run until hangup
           } catch (e) {
             // ignore
