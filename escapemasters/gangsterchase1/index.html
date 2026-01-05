@@ -1153,6 +1153,10 @@
       return;
     }
 
+    if (chatBody) {
+      chatBody.innerHTML = "";
+    }
+
     callOverlay.style.display = "flex";
     if (callLabelEl) callLabelEl.textContent = "Calling…";
     if (callStatusEl) callStatusEl.textContent = "00:00";
